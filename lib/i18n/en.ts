@@ -1,4 +1,5 @@
 import type { Dictionary } from "./types";
+import { ORGS } from "../orgs";
 
 const agree = { low: "Strongly disagree", high: "Strongly agree" };
 
@@ -114,25 +115,24 @@ export const en: Dictionary = {
   },
   give: {
     title: "Giving portal",
-    lede: "You have $1,000 to give today. Read about each organization, choose an amount, and add it to your gifts. Please give the full $1,000 before you review and confirm.",
-    hypothetical: "This is a hypothetical exercise for research. No payment is processed and no money is sent to any organization.",
+    lede: "You have $1,000 to give. Read about each organization, then give to up to three of them. You may give the whole $1,000 to one organization. Please give the full $1,000 before you review and confirm.",
+    hypothetical: "This is a hypothetical exercise for research. All organizations and money in this exercise are hypothetical and were created only for this study. No payment is processed and no money is sent to any organization.",
     balance: "Available to give",
     remaining: (n) => `${n} left to give`,
-    over: (n) => `${n} over your balance`,
     complete: "All $1,000 allocated",
-    give: "Give",
-    addGift: "Add to my gifts",
+    readMore: "Read more",
+    confirm: "Confirm",
     change: "Change",
     remove: "Remove",
-    custom: "Other amount",
-    customPlaceholder: "Enter amount",
-    yourGifts: "Your gifts",
-    noGifts: "You have not added any gifts yet.",
+    close: "Close",
+    amountLabel: "Gift amount in whole dollars ($1 to $1,000)",
+    yourGift: "Your gift",
+    errAmount: "Enter a whole-dollar amount from $1 to $1,000.",
+    errOver: (n) => `That is more than you have left. ${n} remaining.`,
+    errMaxGifts: "You can give to at most three organizations. Remove or change a gift to add another.",
+    continueReason: (n) => `Allocate the full $1,000 to continue. ${n} remaining.`,
+    giftsChosen: (n) => `${n} of 3 organizations chosen`,
     review: "Review and confirm gifts",
-    mission: "Mission",
-    impact: "Impact",
-    safeguards: "Jain-principles safeguards",
-    presets: [50, 100, 250, 500],
   },
   review: {
     title: "Review your gifts",
@@ -156,7 +156,8 @@ export const en: Dictionary = {
         id: "F",
         title: "About your gifts",
         questions: [
-          { id: "F2", type: "radio", text: "Which category did you give the most to?", options: ["Climate / environment", "Animal welfare", "Women / education", "Global health / poverty", "Local community / Jain community services"] },
+          // Options are filled in at runtime with the organizations this participant funded (app/post/page.tsx).
+          { id: "F2", type: "radio", text: "Which organization did you give the most to?", options: [] },
           { id: "F3", type: "scale", text: "How confident do you feel about your allocation?", low: "Not at all confident", high: "Extremely confident" },
           { id: "F4", type: "checkbox", text: "What influenced your allocation the most? (select up to 2)", options: ["Alignment with Jain principles", "Measurable impact / evidence", "Familiarity / trust", "Local/community connection", "Urgency of need"], max: 2, allowOther: true },
         ],
@@ -190,61 +191,6 @@ export const en: Dictionary = {
     body: "Your responses have been recorded. You may now close this window.",
     contactLead: "If you have questions about this study, please contact",
   },
-  organizations: [
-    {
-      id: "climate",
-      name: "Climate / environment",
-      cause: "Environment",
-      control: { mission: "Supports projects to reduce pollution and protect ecosystems." },
-      treatment: {
-        mission: "Reduce pollution and protect ecosystems.",
-        impact: "$100 removes approximately 250 kilograms of plastic waste; $1,000 restores approximately 500 square meters of habitat.",
-        safeguards: "Avoids projects that harm animals; uses low-impact materials; publishes audits and methods.",
-      },
-    },
-    {
-      id: "animals",
-      name: "Animal welfare",
-      cause: "Animals",
-      control: { mission: "Supports programs to reduce suffering of animals and improve animal care." },
-      treatment: {
-        mission: "Reduce suffering and improve animal care.",
-        impact: "$100 funds X vaccinations or sterilizations.",
-        safeguards: "No lethal methods; emphasizes harm-reduction; transparent protocols.",
-      },
-    },
-    {
-      id: "education",
-      name: "Women / education",
-      cause: "Education",
-      control: { mission: "Supports education programs and training that improve opportunities for women and girls." },
-      treatment: {
-        mission: "Education and training to expand opportunity.",
-        impact: "$250 supports X months of schooling.",
-        safeguards: "Non-violent practices; safeguards against exploitation; transparent reporting.",
-      },
-    },
-    {
-      id: "health",
-      name: "Global health / poverty",
-      cause: "Health",
-      control: { mission: "Supports programs that improve health and reduce extreme poverty." },
-      treatment: {
-        mission: "Improve health and reduce extreme poverty.",
-        impact: "$5 provides X units of treatment; $1,000 prevents Y cases.",
-        safeguards: "Screens for indirect harm (e.g., animal testing supply chains) and publishes mitigation steps.",
-      },
-    },
-    {
-      id: "community",
-      name: "Local community / Jain community services",
-      cause: "Community",
-      control: { mission: "Supports local services including food, assistance, and community support." },
-      treatment: {
-        mission: "Local services including food, assistance, and community support.",
-        impact: "$100 funds X meals or assistance packages.",
-        safeguards: "Vegetarian sourcing, low-waste logistics, transparency about suppliers and budgets.",
-      },
-    },
-  ],
+  // English names and descriptions come straight from lib/orgs.ts (verbatim).
+  orgs: Object.fromEntries(ORGS.map((o) => [o.id, { name: o.name, description: o.description }])) as Dictionary["orgs"],
 };

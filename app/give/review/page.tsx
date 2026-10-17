@@ -20,8 +20,8 @@ export default function ReviewPage() {
             <h1>{t.review.title}</h1>
             <p className="lede">{t.review.lede}</p>
             <div className="receipt">
-              {t.organizations.filter((o) => gifts[o.id]).map((o) => (
-                <div className="line" key={o.id}><span>{o.name}</span><span>{usd(gifts[o.id])}</span></div>
+              {s.shownOrgIds.filter((id) => gifts[id]).map((id) => (
+                <div className="line" key={id}><span>{t.orgs[id].name}</span><span>{usd(gifts[id])}</span></div>
               ))}
               <div className="line total"><span>{t.review.total}</span><span>{usd(total)}</span></div>
             </div>
