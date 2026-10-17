@@ -3,23 +3,31 @@
 import { useState } from "react";
 import type { Question, Section } from "@/lib/i18n/types";
 import { useT } from "@/lib/i18n";
+import { cleanAnswers, isVisible, problems, type Problem } from "@/lib/answers";
 
 type Values = Record<string, unknown>;
 
 // `sections` is the localized copy shown to the participant.
 // `canonical` is the English copy; stored answers use English option text so
-// data from all three languages lands in one coding scheme.
+// data from all three languages lands in one coding scheme. Required-answer
+// rules and follow-up conditions (lib/answers.ts) run on the canonical copy.
 export default function SurveyForm({ sections, canonical, submitLabel, onSubmit }: {
   sections: Section[]; canonical: Section[]; submitLabel: string; onSubmit: (values: Values) => void;
 }) {
   const { t } = useT();
   const [values, setValues] = useState<Values>({});
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, Problem>>({});
+  const [summary, setSummary] = useState<string | null>(null);
 
   const canonQ = new Map<string, Question>();
   canonical.forEach((s) => s.questions.forEach((q) => canonQ.set(q.id, q)));
 
-  const set = (id: string, v: unknown) => setValues((prev) => ({ ...prev, [id]: v }));
+  const set = (id: string, v: unknown) => {
+    setValues((prev) => ({ ...prev, [id]: v }));
+    // Clear a question's error as soon as it is answered.
+    const qid = id.replace(/_other$/, "");
+    if (errors[qid]) setErrors(({ [qid]: _, ...rest }) => rest);
+  };
 
   function toggle(id: string, option: string, max?: number) {
     const current = (values[id] as string[] | undefined) ?? [];
@@ -29,11 +37,23 @@ export default function SurveyForm({ sections, canonical, submitLabel, onSubmit 
   }
 
   function submit() {
-    const email = values.email as string | undefined;
-    if (email !== undefined && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError(t.common.emailError);
-    setError(null);
-    onSubmit(values);
+    const found = problems(canonical, values);
+    const ids = Object.keys(found);
+    setErrors(found);
+    if (ids.length) {
+      setSummary(t.common.missing(ids.length));
+      // Move to the first unanswered question.
+      const first = document.getElementById(`q-${ids[0]}`);
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+      first?.querySelector<HTMLElement>("input, textarea")?.focus({ preventScroll: true });
+      return;
+    }
+    setSummary(null);
+    onSubmit(cleanAnswers(canonical, values));
   }
+
+  const message = (p: Problem) =>
+    p === "other" ? t.common.otherRequired : p === "email" ? t.common.emailError : p === "number" ? t.common.numberError : t.common.required;
 
   return (
     <div>
@@ -41,44 +61,55 @@ export default function SurveyForm({ sections, canonical, submitLabel, onSubmit 
         <section key={s.id}>
           <h2>{s.title}</h2>
           {s.instructions && <p className="lede">{s.instructions}</p>}
-          {s.questions.map((q) => (
-            <Field key={q.id} q={q} canon={canonQ.get(q.id) ?? q} values={values} set={set} toggle={toggle} />
-          ))}
+          {s.questions.map((q) => {
+            const canon = canonQ.get(q.id) ?? q;
+            if (!isVisible(canon, values)) return null;
+            return (
+              <Field key={q.id} q={q} canon={canon} values={values} set={set} toggle={toggle}
+                error={errors[q.id] ? message(errors[q.id]) : null} />
+            );
+          })}
         </section>
       ))}
       <button className="primary" type="button" onClick={submit}>{submitLabel}</button>
-      {error && <p className="error" role="alert">{error}</p>}
+      {summary && <p className="error" role="alert">{summary}</p>}
     </div>
   );
 }
 
-function Field({ q, canon, values, set, toggle }: {
-  q: Question; canon: Question; values: Values; set: (id: string, v: unknown) => void; toggle: (id: string, o: string, max?: number) => void;
+function Field({ q, canon, values, set, toggle, error }: {
+  q: Question; canon: Question; values: Values; set: (id: string, v: unknown) => void;
+  toggle: (id: string, o: string, max?: number) => void; error: string | null;
 }) {
   const { t } = useT();
   const otherId = `${q.id}_other`;
+  const errId = `q-${q.id}-error`;
   const canonOpt = (i: number) => ("options" in canon ? canon.options[i] : ("options" in q ? q.options[i] : ""));
+  const shell = (children: React.ReactNode) => (
+    <fieldset id={`q-${q.id}`} className={error ? "invalid" : undefined} aria-describedby={error ? errId : undefined}>
+      <legend>{q.text} <span className="req" aria-hidden="true">*</span></legend>
+      {children}
+      {error && <p id={errId} className="error field-error">{error}</p>}
+    </fieldset>
+  );
 
   if (q.type === "text") {
-    return (
-      <fieldset>
-        <legend>{q.text}</legend>
-        <input type={q.inputType ?? "text"} value={(values[q.id] as string) ?? ""} onChange={(e) => set(q.id, e.target.value)} autoComplete={q.inputType === "email" ? "email" : "off"} />
-      </fieldset>
+    return shell(
+      <input type={q.inputType ?? "text"} inputMode={q.inputType === "number" ? "numeric" : undefined}
+        min={q.inputType === "number" ? 0 : undefined} max={q.inputType === "number" ? 100 : undefined}
+        required aria-invalid={error ? true : undefined}
+        value={(values[q.id] as string) ?? ""} onChange={(e) => set(q.id, e.target.value)}
+        autoComplete={q.inputType === "email" ? "email" : "off"} />,
     );
   }
   if (q.type === "textarea") {
-    return (
-      <fieldset>
-        <legend>{q.text}</legend>
-        <textarea value={(values[q.id] as string) ?? ""} onChange={(e) => set(q.id, e.target.value)} />
-      </fieldset>
+    return shell(
+      <textarea required aria-invalid={error ? true : undefined} value={(values[q.id] as string) ?? ""} onChange={(e) => set(q.id, e.target.value)} />,
     );
   }
   if (q.type === "scale") {
-    return (
-      <fieldset>
-        <legend>{q.text}</legend>
+    return shell(
+      <>
         <div className="scale" role="radiogroup">
           {[1, 2, 3, 4, 5, 6, 7].map((n) => (
             <label key={n}>
@@ -88,7 +119,7 @@ function Field({ q, canon, values, set, toggle }: {
           ))}
         </div>
         <div className="scale-ends"><span>{q.low}</span><span>{q.high}</span></div>
-      </fieldset>
+      </>,
     );
   }
 
@@ -103,45 +134,39 @@ function Field({ q, canon, values, set, toggle }: {
   );
 
   if (q.type === "radio") {
-    return (
-      <fieldset>
-        <legend>{q.text}</legend>
-        <div className="options">
-          {q.options.map((o, i) => (
-            <label key={o}>
-              <input type="radio" name={q.id} value={canonOpt(i)} checked={values[q.id] === canonOpt(i)} onChange={() => set(q.id, canonOpt(i))} />
-              {o}
-            </label>
-          ))}
-          {q.allowOther && (
-            <label>
-              <input type="radio" name={q.id} value="Other" checked={values[q.id] === "Other"} onChange={() => set(q.id, "Other")} />
-              {other}
-            </label>
-          )}
-        </div>
-      </fieldset>
-    );
-  }
-
-  const selected = (values[q.id] as string[] | undefined) ?? [];
-  return (
-    <fieldset>
-      <legend>{q.text}</legend>
+    return shell(
       <div className="options">
         {q.options.map((o, i) => (
           <label key={o}>
-            <input type="checkbox" checked={selected.includes(canonOpt(i))} onChange={() => toggle(q.id, canonOpt(i), q.max)} />
+            <input type="radio" name={q.id} value={canonOpt(i)} checked={values[q.id] === canonOpt(i)} onChange={() => set(q.id, canonOpt(i))} />
             {o}
           </label>
         ))}
         {q.allowOther && (
           <label>
-            <input type="checkbox" checked={selected.includes("Other")} onChange={() => toggle(q.id, "Other", q.max)} />
+            <input type="radio" name={q.id} value="Other" checked={values[q.id] === "Other"} onChange={() => set(q.id, "Other")} />
             {other}
           </label>
         )}
-      </div>
-    </fieldset>
+      </div>,
+    );
+  }
+
+  const selected = (values[q.id] as string[] | undefined) ?? [];
+  return shell(
+    <div className="options">
+      {q.options.map((o, i) => (
+        <label key={o}>
+          <input type="checkbox" checked={selected.includes(canonOpt(i))} onChange={() => toggle(q.id, canonOpt(i), q.max)} />
+          {o}
+        </label>
+      ))}
+      {q.allowOther && (
+        <label>
+          <input type="checkbox" checked={selected.includes("Other")} onChange={() => toggle(q.id, "Other", q.max)} />
+          {other}
+        </label>
+      )}
+    </div>,
   );
 }

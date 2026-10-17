@@ -46,6 +46,10 @@ export const en: Dictionary = {
     otherPlaceholder: "Please specify",
     emailError: "Please enter a valid email address.",
     stepOf: (n, total) => `Step ${n} of ${total}`,
+    required: "Please answer this question.",
+    otherRequired: "Please describe your \u201cOther\u201d answer.",
+    numberError: "Please enter a number of years from 0 to 100.",
+    missing: (n) => `Please answer every question before continuing. ${n} ${n === 1 ? "question needs" : "questions need"} an answer; ${n === 1 ? "it is" : "they are"} marked below.`,
   },
   survey: {
     title: "About you and your giving",
@@ -67,7 +71,7 @@ export const en: Dictionary = {
           { id: "A4", type: "radio", text: "Occupation category (choose closest)", options: ["Tech / Engineering", "Medicine / Healthcare", "Business / Finance", "Academia / Education"], allowOther: true },
           { id: "A5", type: "radio", text: "City/region", options: ["Tampa Bay area", "Orlando area", "Miami/Fort Lauderdale area", "Other Florida"], allowOther: true },
           { id: "A6", type: "radio", text: "Generational status", options: ["US-born", "Born outside the US"] },
-          { id: "A7", type: "text", inputType: "number", text: "If born outside the US, years living in the US" },
+          { id: "A7", type: "text", inputType: "number", showIf: { id: "A6", equals: "Born outside the US" }, text: "If born outside the US, years living in the US" },
         ],
       },
       {
@@ -75,8 +79,8 @@ export const en: Dictionary = {
         title: "Section B: Baseline giving behavior",
         questions: [
           { id: "B1", type: "radio", text: "In the past 12 months, did you donate money to any charitable organization(s)?", options: ["Yes", "No", "Prefer not to say"] },
-          { id: "B2", type: "radio", text: "If yes, about how much did you donate in total in the past 12 months?", options: ["Less than $100", "$100 to $499", "$500 to $999", "$1,000 to $4,999", "$5,000+", "Prefer not to say"] },
-          { id: "B3", type: "radio", text: "If yes, was some or all of this a contribution to a Jain temple (e.g., aarti, temple donation, swamivatsalya/sponsored lunch)? If so, roughly what percentage of your total giving went to the temple?", options: ["All of it", "Most of it (more than half)", "Some of it (less than half)", "None of it", "Prefer not to say"] },
+          { id: "B2", type: "radio", showIf: { id: "B1", equals: "Yes" }, text: "If yes, about how much did you donate in total in the past 12 months?", options: ["Less than $100", "$100 to $499", "$500 to $999", "$1,000 to $4,999", "$5,000+", "Prefer not to say"] },
+          { id: "B3", type: "radio", showIf: { id: "B1", equals: "Yes" }, text: "If yes, was some or all of this a contribution to a Jain temple (e.g., aarti, temple donation, swamivatsalya/sponsored lunch)? If so, roughly what percentage of your total giving went to the temple?", options: ["All of it", "Most of it (more than half)", "Some of it (less than half)", "None of it", "Prefer not to say"] },
           { id: "B4", type: "radio", text: "Do you believe that supporting a charitable organization outside the temple could generate negative karmic consequences for the donor (e.g., through the organization's actions)?", options: ["Yes", "No", "Unsure"] },
           { id: "B5", type: "checkbox", text: "Beyond any temple donations, when you donate, which types of organizations do you typically prioritize? (select all that apply)", options: ["Local community services", "Education (e.g., scholarships, schools)", "Animal welfare", "Environment / climate", "Health / poverty relief"], allowOther: true },
           { id: "B6", type: "radio", text: "Beyond monetary donations, do you volunteer your time to any charitable organizations?", options: ["Yes, primarily at/through the temple", "Yes, primarily outside the temple", "Yes, both", "No"] },

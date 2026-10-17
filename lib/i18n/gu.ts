@@ -48,6 +48,14 @@ export const gu: Dictionary = {
     otherPlaceholder: "કૃપા કરીને જણાવો",
     emailError: "કૃપા કરીને માન્ય ઇમેઇલ સરનામું દાખલ કરો.",
     stepOf: (n, total) => `પગલું ${n} / ${total}`,
+    // NEEDS NATIVE REVIEW
+    required: "કૃપા કરીને આ પ્રશ્નનો જવાબ આપો.",
+    // NEEDS NATIVE REVIEW
+    otherRequired: "કૃપા કરીને તમારા \u201cઅન્ય\u201d જવાબનું વર્ણન કરો.",
+    // NEEDS NATIVE REVIEW
+    numberError: "કૃપા કરીને 0 થી 100 વચ્ચે વર્ષોની સંખ્યા દાખલ કરો.",
+    // NEEDS NATIVE REVIEW
+    missing: (n) => `આગળ વધતા પહેલાં કૃપા કરીને દરેક પ્રશ્નનો જવાબ આપો. ${n} પ્રશ્નોના જવાબ બાકી છે; તે નીચે ચિહ્નિત કરેલા છે.`,
   },
   survey: {
     title: "તમારા અને તમારા દાન વિશે",

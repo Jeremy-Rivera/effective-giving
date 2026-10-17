@@ -2,6 +2,9 @@ import { test, expect, type Page, type Request } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { ORGS } from "../lib/orgs";
 import { youTubeId } from "../lib/youtube";
+import { en } from "../lib/i18n/en";
+import { isVisible } from "../lib/answers";
+import type { Section } from "../lib/i18n/types";
 
 // Acceptance tests from the feedback brief, section 9 (numbered to match).
 
@@ -54,9 +57,8 @@ async function setCondition(page: Page, condition: "control" | "treatment") {
 }
 
 async function survey(page: Page, email: string) {
+  await answerEverything(page);
   await page.locator('input[type="email"]').fill(email);
-  await page.locator('input[name="A1"]').first().check();
-  await page.locator('input[name="C1"][value="6"]').check();
   await page.getByRole("button", { name: "Continue to the video" }).click();
   await expect(page).toHaveURL(/\/watch$/);
 }
@@ -86,8 +88,7 @@ async function fullRun(page: Page, condition: "control" | "treatment", email: st
   await page.getByRole("button", { name: "Review and confirm gifts" }).click();
   await page.getByRole("button", { name: "Confirm gifts" }).click();
   await page.getByRole("button", { name: "Continue to final questions" }).click();
-  await page.locator('input[name="F2"]').first().check();
-  await page.locator('input[name="F3"][value="5"]').check();
+  await answerEverything(page);
   await page.getByRole("button", { name: "Submit my responses" }).click();
   await expect(page).toHaveURL(/\/done$/);
   await expect(page.getByText("Your responses have been recorded")).toBeVisible();
@@ -209,15 +210,28 @@ test("3. three-gift limit, exact total, and $1,000 to one organization", async (
   expect((await rows()).responses).toHaveLength(0);
 });
 
+// A full set of answers, as the browser would send them (first option of each
+// question; follow-ups included only when their condition holds).
+function completeAnswers(sections: Section[]) {
+  const v: Record<string, unknown> = {};
+  for (const sec of sections)
+    for (const q of sec.questions) {
+      if (q.id === "email" || !isVisible(q, v)) continue;
+      v[q.id] = q.type === "radio" ? q.options[0] : q.type === "checkbox" ? [q.options[0]] : q.type === "scale" ? 4
+        : q.type === "text" ? (q.inputType === "number" ? "5" : "text") : "An answer";
+    }
+  return v;
+}
+
 function validPayload(id: string, shownOrgIds: string[]) {
   const now = new Date().toISOString();
   return {
     id, condition: "control", startedAt: now, locale: "en", shownOrgIds, viewportBucket: "desktop",
     consent: { age: "yes", jain: "yes", us: "yes", consentedAt: now, locale: "en" },
-    email: "dup@example.com", baseline: { A1: "25 to 34" },
+    email: "dup@example.com", baseline: completeAnswers(en.survey.sections),
     video: { watchedFraction: 0.95, secondsOnPage: 300 }, videoId: "TESTVIDEO01",
     allocation: { [shownOrgIds[0]]: 1000 }, allocationConfirmedAt: now, secondsOnAllocation: 60,
-    post: { F3: 5 },
+    post: { ...completeAnswers(en.post.sections), F2: shownOrgIds[0] },
   };
 }
 
@@ -479,6 +493,8 @@ test("every question's answer is stored in its own column", async ({ page }) => 
   await fakeYouTube(page);
   await consent(page);
   await answerEverything(page);
+  await page.locator('input[name="A6"][value="Born outside the US"]').check();
+  await page.locator("#q-A7 input").fill("12");
   await page.getByRole("button", { name: "Continue to the video" }).click();
   await watch(page);
   await give(page, 0, "700");
@@ -517,4 +533,69 @@ test("every question's answer is stored in its own column", async ({ page }) => 
   expect(ORGS.reduce((a, o) => a + r[`${o.id}_dollars`], 0)).toBe(1000);
   expect(r.top_choice_org_name).toBe(name(first));
   expect(r.shown_orgs.split("; ")).toEqual(r.shown_org_ids.map(name));
+});
+
+test("required: nothing can be skipped, follow-ups appear only when they apply", async ({ page }) => {
+  await consent(page);
+  const cont = page.getByRole("button", { name: "Continue to the video" });
+
+  // Empty form: blocked, every question marked, focus on the first one.
+  await cont.click();
+  await expect(page.locator("main [role=alert]")).toContainText("Please answer every question before continuing.");
+  await expect(page).toHaveURL(/\/survey$/);
+  expect(await page.locator("fieldset.invalid").count()).toBeGreaterThan(20);
+  expect(await page.evaluate(() => document.activeElement?.closest("fieldset")?.id)).toBe("q-email");
+
+  // Follow-ups: A7 only if born outside the US; B2 and B3 only if B1 is Yes.
+  await page.locator('input[name="A6"][value="US-born"]').check();
+  await expect(page.locator("#q-A7")).toHaveCount(0);
+  await page.locator('input[name="A6"][value="Born outside the US"]').check();
+  await expect(page.locator("#q-A7")).toHaveCount(1);
+  await page.locator('input[name="B1"][value="No"]').check();
+  await expect(page.locator("#q-B2, #q-B3")).toHaveCount(0);
+  await page.locator('input[name="B1"][value="Yes"]').check();
+  await expect(page.locator("#q-B2")).toHaveCount(1);
+
+  // Fill everything, then leave "Other" text empty: blocked on that question.
+  await answerEverything(page); // picks "US-born", which hides A7 again
+  await page.locator('input[name="A6"][value="Born outside the US"]').check();
+  await page.locator("#q-A7 input").fill("12");
+  await page.locator('input[name="A2"][value="Other"]').check();
+  await page.locator('#q-A2 input[aria-label="Please specify"]').fill("");
+  await cont.click();
+  await expect(page.locator("#q-A2 .field-error")).toHaveText("Please describe your \u201cOther\u201d answer.");
+  await expect(page.locator("fieldset.invalid")).toHaveCount(1);
+
+  // An impossible number of years is refused.
+  await page.locator('#q-A2 input[aria-label="Please specify"]').fill("Self-described");
+  await page.locator("#q-A7 input").fill("400");
+  await cont.click();
+  await expect(page.locator("#q-A7 .field-error")).toHaveText("Please enter a number of years from 0 to 100.");
+  await page.locator("#q-A7 input").fill("12");
+  await cont.click();
+  await expect(page).toHaveURL(/\/watch$/);
+
+  // A follow-up answered and then hidden again is not stored.
+  const s = await session(page);
+  expect(s.baseline.A7).toBe("12");
+  expect(s.baseline.B2).toBeTruthy();
+});
+
+test("required: the server refuses a record with any answer missing", async ({ request }) => {
+  const shown = ["org01", "org02", "org03", "org04", "org05", "org06"];
+  const base = validPayload(crypto.randomUUID(), shown);
+  const { B1: _b1, ...noB1 } = base.baseline as Record<string, unknown>;
+  const { G3: _g3, ...noG3 } = base.post as Record<string, unknown>;
+  for (const [data, field] of [
+    [{ ...base, baseline: noB1 }, "baseline.B1"],
+    [{ ...base, post: noG3 }, "post.G3"],
+    [{ ...base, post: { ...base.post, H1: "  " } }, "post.H1"],
+    [{ ...base, email: "" }, "email"],
+    [{ ...base, post: { ...base.post, F2: "org02" } }, "post.F2"],
+  ] as const) {
+    const r = await request.post("/api/submit", { data });
+    expect(r.status()).toBe(400);
+    expect((await r.json()).issues.join(" ")).toContain(field);
+  }
+  expect((await rows()).responses).toHaveLength(0);
 });

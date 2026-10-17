@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid", issues }, { status: 400 });
   }
 
-  const email = parsed.data.email || undefined;
+  const email = parsed.data.email;
   try {
     const outcome = await persist(toResponseRow(parsed.data), email);
     return NextResponse.json({ ok: true, duplicate: outcome === "duplicate" });

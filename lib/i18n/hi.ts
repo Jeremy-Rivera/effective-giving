@@ -48,6 +48,14 @@ export const hi: Dictionary = {
     otherPlaceholder: "कृपया बताएँ",
     emailError: "कृपया एक मान्य ईमेल पता दर्ज करें।",
     stepOf: (n, total) => `चरण ${n} / ${total}`,
+    // NEEDS NATIVE REVIEW
+    required: "कृपया इस प्रश्न का उत्तर दें।",
+    // NEEDS NATIVE REVIEW
+    otherRequired: "कृपया अपने \u201cअन्य\u201d उत्तर का विवरण दें।",
+    // NEEDS NATIVE REVIEW
+    numberError: "कृपया 0 से 100 के बीच वर्षों की संख्या दर्ज करें।",
+    // NEEDS NATIVE REVIEW
+    missing: (n) => `आगे बढ़ने से पहले कृपया हर प्रश्न का उत्तर दें। ${n} प्रश्नों का उत्तर बाकी है; वे नीचे चिह्नित हैं।`,
   },
   survey: {
     title: "आपके और आपके दान के बारे में",

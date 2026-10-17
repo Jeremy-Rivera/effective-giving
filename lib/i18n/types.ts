@@ -2,12 +2,18 @@ import type { OrgId } from "../orgs";
 
 export type Locale = "en" | "hi" | "gu";
 
-export type Question =
+// A follow-up question shown (and required) only when an earlier answer
+// matches. Compared against the stored English option text, so it is set on
+// the English questions only.
+export type ShowIf = { id: string; equals: string };
+
+export type Question = (
   | { id: string; type: "radio"; text: string; options: string[]; allowOther?: boolean }
   | { id: string; type: "checkbox"; text: string; options: string[]; max?: number; allowOther?: boolean }
   | { id: string; type: "scale"; text: string; low: string; high: string }
   | { id: string; type: "text"; text: string; inputType?: "text" | "email" | "number" }
-  | { id: string; type: "textarea"; text: string };
+  | { id: string; type: "textarea"; text: string }
+) & { showIf?: ShowIf };
 
 export type Section = { id: string; title: string; instructions?: string; questions: Question[] };
 
@@ -28,7 +34,10 @@ export type Dictionary = {
     consentButton: string; error: string; subtext: string;
   };
   screenedOut: { title: string; body: string; contactLead: string };
-  common: { other: string; otherPlaceholder: string; emailError: string; stepOf: (n: number, total: number) => string };
+  common: {
+    other: string; otherPlaceholder: string; emailError: string; stepOf: (n: number, total: number) => string;
+    required: string; otherRequired: string; numberError: string; missing: (n: number) => string;
+  };
   survey: { title: string; submit: string; sections: Section[] };
   watch: { title: string; lede: string; noVideo: string; watched: (pct: number) => string; cont: string };
   give: {

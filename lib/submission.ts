@@ -5,6 +5,12 @@
 import { z } from "zod";
 import { ORG_IDS, SHOWN_COUNT, orgById, type OrgId } from "./orgs";
 import { MAX_GIFTS, TOTAL } from "./money";
+import { problems } from "./answers";
+import { en } from "./i18n/en";
+
+// The English questions are the source of truth for what must be answered.
+const BASELINE_SECTIONS = en.survey.sections.filter((s) => s.id !== "contact");
+const POST_SECTIONS = en.post.sections;
 
 const orgId = z.enum(ORG_IDS as [string, ...string[]]);
 const isoDate = z.string().datetime({ offset: true });
@@ -23,7 +29,7 @@ export const submissionSchema = z
       consentedAt: isoDate,
       locale: z.string().optional(),
     }),
-    email: z.string().trim().email().max(320).optional().or(z.literal("")),
+    email: z.string().trim().email().max(320),
     baseline: answers,
     video: z.object({
       watchedFraction: z.number().min(0).max(1),
@@ -48,6 +54,12 @@ export const submissionSchema = z
       ctx.addIssue({ code: "custom", path: ["allocation"], message: `at most ${MAX_GIFTS} organizations` });
     if (entries.some(([k]) => !s.shownOrgIds.includes(k as never)))
       ctx.addIssue({ code: "custom", path: ["allocation"], message: "keys must be in shownOrgIds" });
+    // Every question is required (follow-ups only when shown).
+    for (const [where, sections, values] of [["baseline", BASELINE_SECTIONS, s.baseline], ["post", POST_SECTIONS, s.post]] as const)
+      for (const [id, problem] of Object.entries(problems(sections, values)))
+        ctx.addIssue({ code: "custom", path: [where, id], message: problem });
+    if (typeof s.post.F2 !== "string" || !(s.allocation[s.post.F2] > 0))
+      ctx.addIssue({ code: "custom", path: ["post", "F2"], message: "must be a funded organization" });
   });
 
 export type Submission = z.infer<typeof submissionSchema>;
