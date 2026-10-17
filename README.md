@@ -56,4 +56,17 @@ Image requirements:
 
 ## Storage
 
-`app/api/submit/route.ts` posts to `SUBMIT_WEBHOOK_URL` if set, otherwise logs to the server console. Point the webhook at whatever store the team picks. IP addresses are never read or stored.
+Responses go to Supabase (Postgres). `supabase/schema.sql` creates:
+
+- `responses`: one row per completed participant, keyed by the browser session id (a retry never double-inserts), with derived columns for analysis (`ea_dollars`, `ea_share`, `jain_values_dollars`, `n_orgs_funded`, `max_single_gift`, `top_choice_org_id`).
+- `contact_emails`: email plus a day-level date, with no id or other link to `responses` (consent text: the email is removed from responses).
+- `responses_export`: a flat view, one column per answer and per organization, for CSV export.
+
+`app/api/submit/route.ts` validates the record (total exactly $1,000, at most three organizations, only shown organizations), then calls `submit_response()`, which writes both tables in one transaction. It needs `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (server-only). Without them it returns 500 in production; in `npm run dev` it prints a warning and the record instead of saving. IP addresses, user agents and request bodies are never read or logged.
+
+## Tests
+
+    npx playwright install chromium   # once
+    npm run test:e2e
+
+Builds the site with test video ids and runs the acceptance tests in `tests/acceptance.spec.ts` against a production server and a local stand-in for Supabase (`tests/fake-supabase.mjs`, which runs `supabase/schema.sql` in PGlite). Screenshots at 390 px land in `.playwright/`. Run `npm run build` afterwards before `npm start`, since the test build bakes in placeholder video ids.
