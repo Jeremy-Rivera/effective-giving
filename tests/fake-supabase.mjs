@@ -34,7 +34,7 @@ http
   .createServer(async (req, res) => {
     try {
       if (req.method === "POST" && req.url === "/rest/v1/rpc/submit_response") {
-        if (req.headers.apikey !== KEY || req.headers.authorization !== `Bearer ${KEY}`) return send(res, 401, { code: "PGRST301" });
+        if (req.headers.apikey !== KEY) return send(res, 401, { code: "PGRST301" });
         const { p_response, p_email } = JSON.parse(await read(req));
         const r = await db.query("select public.submit_response($1::jsonb, $2) as ok", [JSON.stringify(p_response), p_email]);
         return send(res, 200, r.rows[0].ok);

@@ -30,7 +30,9 @@ async function persist(row: ReturnType<typeof toResponseRow>, email: string | un
 
   const res = await fetch(`${url.replace(/\/$/, "")}/rest/v1/rpc/submit_response`, {
     method: "POST",
-    headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    // Legacy service_role keys are JWTs and also go in Authorization; the newer
+    // sb_secret_ keys are not JWTs and only go in apikey.
+    headers: { apikey: key, ...(key.startsWith("eyJ") ? { Authorization: `Bearer ${key}` } : {}), "Content-Type": "application/json" },
     body: JSON.stringify({ p_response: row, p_email: email ?? null }),
     cache: "no-store",
   });
