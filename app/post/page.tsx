@@ -13,9 +13,14 @@ export default function PostPage() {
   const [error, setError] = useState<string | null>(null);
 
   async function finish(values: Record<string, unknown>) {
+    setError(null);
     const s = updateSession({ post: values });
-    const res = await fetch("/api/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
-    if (!res.ok) return setError(t.post.error);
+    const send = () =>
+      fetch("/api/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) })
+        .then((r) => r.ok, () => false);
+    // One automatic retry. Safe because the server ignores a repeated session id.
+    const ok = (await send()) || (await new Promise((r) => setTimeout(r, 1500)), await send());
+    if (!ok) return setError(t.post.error);
     router.push("/done");
   }
 
