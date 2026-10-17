@@ -134,8 +134,8 @@ test("1. control and treatment runs each write one response and one unlinked ema
   expect(byCond.control.video_id).toBe("TESTCONTRL1");
   expect(byCond.treatment.video_id).toBe("TESTTREATM1");
   expect(exported).toHaveLength(2);
-  expect(exported[0]).toHaveProperty("org01_dollars");
-  expect(exported[0]).toHaveProperty("f2_top_choice");
+  expect(exported[0]).toHaveProperty("org01_global_malaria_initiative_dollars");
+  expect(exported[0]).toHaveProperty("f2_gave_most_to_org_id");
 });
 
 test("2. abandoning at /give writes nothing and sends nothing", async ({ page }) => {
@@ -449,4 +449,72 @@ test("video embed: real YouTube iframe with related videos off, Continue locked 
   await page.waitForTimeout(1500);
   await expect(page.getByRole("button", { name: "Continue to the giving portal" })).toBeDisabled();
   await expect(page.locator(".watched")).toHaveText("0% watched");
+});
+
+// Answers every question on the page: first option of each radio group and
+// checkbox list, text in every text box, and "Other" plus its text box where
+// offered (so the *_other columns are exercised too).
+async function answerEverything(page: Page) {
+  await expect(page.locator("main fieldset").first()).toBeVisible();
+  const fieldsets = page.locator("main fieldset");
+  for (let i = 0; i < (await fieldsets.count()); i++) {
+    const fs = fieldsets.nth(i);
+    if (await fs.locator('input[type="radio"]').count()) await fs.locator('input[type="radio"]').first().check();
+    if (await fs.locator('input[type="checkbox"]').count()) await fs.locator('input[type="checkbox"]').first().check();
+    for (const sel of ['input[type="email"]', 'input[type="number"]', "textarea"]) {
+      const box = fs.locator(sel);
+      if (await box.count()) await box.fill(sel.includes("email") ? "everything@example.com" : sel.includes("number") ? "12" : `Answer ${i}`);
+    }
+  }
+  const others = page.locator('input[aria-label="Please specify"]');
+  for (let i = 0; i < (await others.count()); i++) {
+    const other = others.nth(i);
+    await other.fill(`Other text ${i}`);
+    const box = other.locator("xpath=ancestor::label").locator('input[type="checkbox"]');
+    if (await box.count()) await box.check();
+  }
+}
+
+test("every question's answer is stored in its own column", async ({ page }) => {
+  await fakeYouTube(page);
+  await consent(page);
+  await answerEverything(page);
+  await page.getByRole("button", { name: "Continue to the video" }).click();
+  await watch(page);
+  await give(page, 0, "700");
+  await give(page, 1, "300");
+  await page.getByRole("button", { name: "Review and confirm gifts" }).click();
+  await page.getByRole("button", { name: "Confirm gifts" }).click();
+  await page.getByRole("button", { name: "Continue to final questions" }).click();
+  await answerEverything(page);
+  await page.getByRole("button", { name: "Submit my responses" }).click();
+  await expect(page).toHaveURL(/\/done$/);
+
+  const { responses, exported, emails } = await rows();
+  expect(emails.map((e) => e.email)).toEqual(["everything@example.com"]);
+  const row = exported[0];
+  const empty = Object.entries(row).filter(([, v]) => v === null || v === "").map(([k]) => k);
+  expect(empty).toEqual([]);
+
+  // Spot-check that values are the participant's actual answers.
+  expect(row.a1_age).toBe("18 to 24");
+  expect(row.a2_gender).toBe("Other");
+  expect(row.a2_gender_other).toMatch(/^Other text/);
+  expect(row.a3_education).toBe("High school or less");
+  expect(row.a7_years_in_us).toBe("12");
+  expect(row.b5_priorities).toBe("Local community services; Other");
+  expect(row.c1_minimize_harm_daily).toBe(1);
+  expect(row.h3_safeguards_wanted).toMatch(/^Answer/);
+
+  // Which organizations were funded, by name and amount.
+  const r = responses[0];
+  const [first, second] = r.shown_org_ids;
+  const name = (id: string) => ORGS.find((o) => o.id === id)!.name;
+  expect(r.funded_org_ids).toEqual([first, second]);
+  expect(r.funded_orgs).toBe(`${name(first)}: $700; ${name(second)}: $300`);
+  expect(r[`${first}_dollars`]).toBe(700);
+  expect(r[`${second}_dollars`]).toBe(300);
+  expect(ORGS.reduce((a, o) => a + r[`${o.id}_dollars`], 0)).toBe(1000);
+  expect(r.top_choice_org_name).toBe(name(first));
+  expect(r.shown_orgs.split("; ")).toEqual(r.shown_org_ids.map(name));
 });

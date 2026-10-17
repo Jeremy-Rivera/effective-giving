@@ -3,7 +3,7 @@
 // researchers can regress on flat columns without unpacking JSON.
 
 import { z } from "zod";
-import { ORG_IDS, SHOWN_COUNT, orgById } from "./orgs";
+import { ORG_IDS, SHOWN_COUNT, orgById, type OrgId } from "./orgs";
 import { MAX_GIFTS, TOTAL } from "./money";
 
 const orgId = z.enum(ORG_IDS as [string, ...string[]]);
@@ -62,6 +62,12 @@ export function toResponseRow(s: Submission) {
     funded.filter(([id]) => pred(id)).reduce((a, [, v]) => a + v, 0);
   const eaDollars = sumWhere((id) => orgById(id)!.ea);
   const f2 = typeof s.post.F2 === "string" ? s.post.F2 : null;
+  const topChoice = f2 && s.shownOrgIds.includes(f2 as never) ? f2 : null;
+  // Funded organizations in the order they were shown, so columns read naturally.
+  const fundedIds = s.shownOrgIds.filter((id) => (s.allocation[id] ?? 0) > 0);
+  const name = (id: string) => orgById(id)!.name;
+  // One dollar column per organization (0 if not funded or not shown).
+  const perOrg = Object.fromEntries(ORG_IDS.map((id: OrgId) => [`${id}_dollars`, s.allocation[id] ?? 0]));
 
   return {
     id: s.id,
@@ -85,6 +91,11 @@ export function toResponseRow(s: Submission) {
     non_ea_dollars: TOTAL - eaDollars,
     ea_share: eaDollars / TOTAL,
     jain_values_dollars: sumWhere((id) => orgById(id)!.jainValues),
-    top_choice_org_id: f2 && s.shownOrgIds.includes(f2 as never) ? f2 : null,
+    top_choice_org_id: topChoice,
+    top_choice_org_name: topChoice ? name(topChoice) : null,
+    funded_org_ids: fundedIds,
+    funded_orgs: fundedIds.map((id) => `${name(id)}: $${s.allocation[id]}`).join("; "),
+    shown_orgs: s.shownOrgIds.map(name).join("; "),
+    ...perOrg,
   };
 }

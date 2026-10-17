@@ -1,4 +1,4 @@
-// DECISION 8.1 (unconfirmed): the IRB protocol abstract says participants
+// DECISION 8.1 (confirmed Oct 17: keep $1,000 as the maximum). The IRB protocol abstract says participants
 // allocate "a hypothetical $10,000". The site, the consent flow and the Oct 16
 // meeting all use $1,000. Jeremy is checking with Justin. If the protocol
 // figure wins, change TOTAL here AND the "$1,000" wording in lib/i18n/*.ts
