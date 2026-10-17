@@ -39,7 +39,6 @@ export default function LandingPage() {
   return (
     <>
       <h1>{L.title}</h1>
-      <p className="lede">{L.lede}</p>
       <p>{L.p1}</p>
       <p>
         {L.contactLead} (<a href="mailto:jwhenry@usf.edu">jwhenry@usf.edu</a>) {L.contactJoin} (

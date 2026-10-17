@@ -7,7 +7,8 @@ export const en: Dictionary = {
   masthead: {
     protocolLabel: "Research study consent and survey",
     protocolTitle: "Jain Philanthropy and Effective Altruism",
-    irbLabel: "IRB study number: pending",
+    // Official identifier: kept in English in every language.
+    irbLabel: "USF IRB Study No. 010845",
   },
   footer: {
     investigators: "Principal investigators: Prof. Justin Henry and AJ Chauradia",
@@ -15,12 +16,11 @@ export const en: Dictionary = {
     privacy: "Responses are stored without IP addresses. Your email is separated from your answers during storage.",
   },
   landing: {
-    title: "Welcome to the University of South Florida \u201cJain Philanthropy and Effective Altruism\u201d!",
-    lede: "The survey will take approximately 20 minutes to complete.",
-    p1: "The following survey is in support of a study on \u201cJain Philanthropy and Effective Altruism\u201d conducted by researchers at the University of South Florida. The only identifying personal information you will be asked to provide is your email address. You are free to stop taking the online survey at any time, in which case none of the data you have entered to that point will be used or electronically stored.",
+    title: "Welcome to our survey!",
+    p1: "This survey is in support of a study on \u201cJain Philanthropy and Effective Altruism\u201d conducted by researchers at the University of South Florida and will take approximately 20 minutes to complete. The purpose of the study is to understand the choices that American Jains make in their support of various charitable organizations, including differences in generational tendencies as well as underlying motivations (e.g. religious v. secular) for making choices in charitable donation. The survey asks for some general information about your current giving status after which you will watch a short video and complete a short questionnaire regarding hypothetical donations to a set of charitable organizations. Please note that the organizations listed in this section of the survey are fictional and any similarities they may have to current global charities are purely coincidental. The only identifying personal information you will be asked to provide is your email address. We do not anticipate any risks to you in undertaking this survey. Our paper on Jain charitable giving will be shared with JSTB for distribution following publication.",
     contactLead: "Contact the survey researchers should you wish to follow up with them for any reason: Prof. Justin Henry",
     contactJoin: "and AJ Chauradia",
-    p3: "Publication of data from this study will be purely anonymous in aggregate form. No identifying information will be made public from this study. For more information on the digital security of data collected from this study, see below.",
+    p3: "You are free to stop taking the online survey at any time, in which case none of the data you have entered to that point will be used or electronically stored. Publication of data from this study will be purely anonymous in aggregate form. No identifying information will be made public from this study. For more information on the digital security of data collected from this study, see below.",
     confirmHeading: "To participate, please confirm:",
     q1: "I am at least 18 years old and I agree to participate in this anonymous survey.",
     q1yes: "Yes, I agree",

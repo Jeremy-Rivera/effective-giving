@@ -18,8 +18,8 @@ export default function SiteFrame({ children }: { children: React.ReactNode }) {
           <LanguageSwitcher />
         </div>
         <div className="protocol">
+          <b className="irb">{t.masthead.irbLabel}</b>
           <span>{t.masthead.protocolLabel}</span>
-          <span>{t.masthead.irbLabel}</span>
         </div>
       </header>
       <main>{children}</main>

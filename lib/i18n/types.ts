@@ -22,7 +22,7 @@ export type Dictionary = {
   masthead: { protocolLabel: string; protocolTitle: string; irbLabel: string };
   footer: { investigators: string; hypothetical: string; privacy: string };
   landing: {
-    title: string; lede: string; p1: string; contactLead: string; contactJoin: string; p3: string;
+    title: string; p1: string; contactLead: string; contactJoin: string; p3: string;
     confirmHeading: string;
     q1: string; q1yes: string; q1no: string;
     q2: string; q2yes: string; q2no: string;
