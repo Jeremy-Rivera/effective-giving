@@ -1,3 +1,5 @@
+import type { OrgId } from "../orgs";
+
 export type Locale = "en" | "hi" | "gu";
 
 export type Question =
@@ -9,20 +11,16 @@ export type Question =
 
 export type Section = { id: string; title: string; instructions?: string; questions: Question[] };
 
-export type Organization = {
-  id: string;
-  name: string;
-  cause: string;
-  control: { mission: string };
-  treatment: { mission: string; impact: string; safeguards: string };
-};
+// Name and full description of each organization, in this language.
+// English comes from lib/orgs.ts; the flags (ea, jainValues) live only there.
+export type OrgText = { name: string; description: string };
 
 export type Dictionary = {
   langName: string;
   masthead: { protocolLabel: string; protocolTitle: string; irbLabel: string };
   footer: { investigators: string; hypothetical: string; privacy: string };
   landing: {
-    title: string; lede: string; p1: string; contactLead: string; contactJoin: string; p3: string;
+    title: string; p1: string; contactLead: string; contactJoin: string; p3: string;
     confirmHeading: string;
     q1: string; q1yes: string; q1no: string;
     q2: string; q2yes: string; q2no: string;
@@ -32,17 +30,19 @@ export type Dictionary = {
   screenedOut: { title: string; body: string; contactLead: string };
   common: { other: string; otherPlaceholder: string; emailError: string; stepOf: (n: number, total: number) => string };
   survey: { title: string; submit: string; sections: Section[] };
-  watch: { title: string; lede: string; noVideo: string; cont: string };
+  watch: { title: string; lede: string; noVideo: string; watched: (pct: number) => string; cont: string };
   give: {
     title: string; lede: string; hypothetical: string; balance: string;
-    remaining: (n: string) => string; over: (n: string) => string; complete: string;
-    give: string; addGift: string; change: string; remove: string; custom: string; customPlaceholder: string;
-    yourGifts: string; noGifts: string; review: string;
-    mission: string; impact: string; safeguards: string; presets: number[];
+    remaining: (n: string) => string; complete: string;
+    readMore: string; confirm: string; change: string; remove: string; close: string;
+    amountLabel: string; yourGift: string; photo: string;
+    errAmount: string; errOver: (remaining: string) => string; errMaxGifts: string;
+    continueReason: (remaining: string) => string; giftsChosen: (n: number) => string;
+    review: string;
   };
   review: { title: string; lede: string; total: string; edit: string; confirm: string };
   confirmation: { title: string; body: string; reference: string; cont: string };
   post: { title: string; submit: string; error: string; sections: Section[] };
   done: { title: string; body: string; contactLead: string };
-  organizations: Organization[];
+  orgs: Record<OrgId, OrgText>;
 };

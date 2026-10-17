@@ -13,11 +13,11 @@ Available in English, Hindi, and Gujarati via the switcher in the masthead.
 
 | Route | What it does |
 |---|---|
-| `/` | Landing page with the IRB consent text and three eligibility questions. Assigns Control or Treatment (50/50) on consent. |
+| `/` | Landing page with the IRB consent text and three eligibility questions. On consent, assigns Control or Treatment (50/50) and draws the six organizations. |
 | `/screened-out` | Shown when any eligibility answer is No. Nothing stored. |
 | `/survey` | Email plus Sections A to D. |
 | `/watch` | YouTube player. Control plays the Segment 1 video; Treatment plays the Segment 1 + 2 video. Continue unlocks at 90 percent watched. |
-| `/give` | Giving portal: five organization cards, each with a Give button, preset amounts, custom amount, and a running balance. Control sees mission only; Treatment sees mission, impact, and Jain-principles safeguards. |
+| `/give` | Giving portal: six of the twelve organizations (3 EA + 3 Jain-values, shuffled, drawn once at consent). Each card has an image, a teaser, and "Read more", which opens a full-page dialog with the full description and the gift amount. Give up to three organizations; total must be exactly $1,000. Both conditions see the same text. |
 | `/give/review` | Receipt-style summary with Back and Confirm. |
 | `/give/confirmation` | Thank-you page with a reference number and summary. |
 | `/post` | Sections F to H. Submits the whole record to `/api/submit`. |
@@ -35,10 +35,40 @@ The Hindi and Gujarati consent text has not been reviewed by a native speaker. H
 
 - Consent and landing text: `lib/i18n/*.ts` under `landing`
 - Survey items: `lib/i18n/*.ts` under `survey.sections` and `post.sections`
-- Organization descriptions (both conditions): `lib/i18n/*.ts` under `organizations`
+- Organizations (English text, EA flags, image alt text): `lib/orgs.ts`; Hindi and Gujarati under `orgs` in `lib/i18n/hi.ts` and `gu.ts`
+- Selection mode (stratified 3 + 3, or any 6 of 12): `SELECTION_MODE` in `lib/orgs.ts`
+- Total to allocate and the three-gift limit: `TOTAL` and `MAX_GIFTS` in `lib/money.ts`
 - Masthead (IRB number): `lib/i18n/*.ts` under `masthead`
 - Video IDs and watch gate: `.env.local`
 
+## Organization images
+
+One image per organization lives at `public/orgs/org01.jpg` ... `org12.jpg` (the ids in `lib/orgs.ts`). All twelve are openly licensed photos from Wikimedia Commons; sources, authors and licenses are in `public/orgs/CREDITS.md`. Each organization's `imageAlt` and `credit` (shown as plain text under the enlarged image, as CC BY and CC BY-SA require) are in `lib/orgs.ts`. If a file is missing, the card shows a neutral placeholder with the organization name.
+
+To replace an image, overwrite the file, then update `imageAlt`, `credit` and the CREDITS.md row.
+
+Image requirements:
+
+- License-free (public domain or a license that allows this use, with attribution recorded if required)
+- No non-vegetarian food
+- No tattoos
+- No identifiable logos of real organizations
+- No depictions of religious figures
+- Landscape, roughly 16:9 or 3:2, 1200 px wide, under about 400 KB
+
 ## Storage
 
-`app/api/submit/route.ts` posts to `SUBMIT_WEBHOOK_URL` if set, otherwise logs to the server console. Point the webhook at whatever store the team picks. IP addresses are never read or stored.
+Responses go to Supabase (Postgres). `supabase/schema.sql` creates:
+
+- `responses`: one row per completed participant, keyed by the browser session id (a retry never double-inserts), with derived columns for analysis (`ea_dollars`, `ea_share`, `jain_values_dollars`, `n_orgs_funded`, `max_single_gift`, `top_choice_org_id`).
+- `contact_emails`: email plus a day-level date, with no id or other link to `responses` (consent text: the email is removed from responses).
+- `responses_export`: a flat view, one column per answer and per organization, for CSV export.
+
+`app/api/submit/route.ts` validates the record (total exactly $1,000, at most three organizations, only shown organizations), then calls `submit_response()`, which writes both tables in one transaction. It needs `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (server-only). Without them it returns 500 in production; in `npm run dev` it prints a warning and the record instead of saving. IP addresses, user agents and request bodies are never read or logged.
+
+## Tests
+
+    npx playwright install chromium   # once
+    npm run test:e2e
+
+Builds the site with test video ids and runs the acceptance tests in `tests/acceptance.spec.ts` against a production server and a local stand-in for Supabase (`tests/fake-supabase.mjs`, which runs `supabase/schema.sql` in PGlite). Screenshots at 390 px land in `.playwright/`. Run `npm run build` afterwards before `npm start`, since the test build bakes in placeholder video ids.
