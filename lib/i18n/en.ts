@@ -110,7 +110,8 @@ export const en: Dictionary = {
   watch: {
     title: "Please watch this short video",
     lede: "The Continue button becomes available near the end of the video.",
-    noVideo: "No video ID configured. Set NEXT_PUBLIC_VIDEO_CONTROL_ID and NEXT_PUBLIC_VIDEO_TREATMENT_ID.",
+    noVideo: "The video could not be loaded. Please refresh the page. If it still does not appear, contact the researchers listed below.",
+    watched: (pct) => `${pct}% watched`,
     cont: "Continue to the giving portal",
   },
   give: {

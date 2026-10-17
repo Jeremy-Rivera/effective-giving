@@ -30,7 +30,7 @@ export type Dictionary = {
   screenedOut: { title: string; body: string; contactLead: string };
   common: { other: string; otherPlaceholder: string; emailError: string; stepOf: (n: number, total: number) => string };
   survey: { title: string; submit: string; sections: Section[] };
-  watch: { title: string; lede: string; noVideo: string; cont: string };
+  watch: { title: string; lede: string; noVideo: string; watched: (pct: number) => string; cont: string };
   give: {
     title: string; lede: string; hypothetical: string; balance: string;
     remaining: (n: string) => string; complete: string;

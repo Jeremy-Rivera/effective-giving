@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import RequireSession from "@/components/RequireSession";
 import { updateSession } from "@/lib/store";
 import { useT } from "@/lib/i18n";
+import { youTubeId } from "@/lib/youtube";
 
+// Each env var may hold a YouTube link or a bare id (see lib/youtube.ts).
 const IDS = {
-  control: process.env.NEXT_PUBLIC_VIDEO_CONTROL_ID ?? "",
-  treatment: process.env.NEXT_PUBLIC_VIDEO_TREATMENT_ID ?? "",
+  control: youTubeId(process.env.NEXT_PUBLIC_VIDEO_CONTROL_ID),
+  treatment: youTubeId(process.env.NEXT_PUBLIC_VIDEO_TREATMENT_ID),
 };
 const GATE = Number(process.env.NEXT_PUBLIC_VIDEO_GATE ?? "0.9");
 const TICK_MS = 500;
@@ -38,6 +40,7 @@ function Player({ videoId, onDone }: { videoId: string; onDone: (v: { watchedFra
   const { t } = useT();
   const [fraction, setFraction] = useState(0);
   const started = useRef(Date.now());
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerRef = useRef<any>(null);
   // Furthest point reached by continuous playback. Seeking back keeps it;
   // seeking ahead past it does not count until playback actually gets there.
@@ -45,16 +48,12 @@ function Player({ videoId, onDone }: { videoId: string; onDone: (v: { watchedFra
 
   useEffect(() => {
     if (!videoId) return;
-    const init = () => {
-      playerRef.current = new window.YT.Player("yt-player", {
-        videoId,
-        // rel: 0 keeps end-of-video suggestions to the same channel; nothing autoplays.
-        playerVars: { rel: 0, modestbranding: 1, playsinline: 1, autoplay: 0 },
-      });
-    };
-    if (window.YT?.Player) init();
+    // The iframe is already on the page and playable; the IFrame API attaches
+    // to it only to read the playback position for the gate.
+    const attach = () => { playerRef.current = new window.YT.Player(iframeRef.current); };
+    if (window.YT?.Player) attach();
     else {
-      window.onYouTubeIframeAPIReady = init;
+      window.onYouTubeIframeAPIReady = attach;
       const tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
       document.body.appendChild(tag);
@@ -73,14 +72,30 @@ function Player({ videoId, onDone }: { videoId: string; onDone: (v: { watchedFra
     return () => clearInterval(timer);
   }, [videoId]);
 
-  const unlocked = fraction >= GATE || !videoId;
+  // The gate is always enforced: no video configured means no way forward.
+  const unlocked = Boolean(videoId) && fraction >= GATE;
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   return (
     <>
       <p className="progress">{t.common.stepOf(2, 4)}</p>
       <h1>{t.watch.title}</h1>
       <p className="lede">{t.watch.lede}</p>
-      {videoId ? <div className="video-frame"><div id="yt-player" /></div> : <p className="error">{t.watch.noVideo}</p>}
+      {videoId ? (
+        <div className="video-frame">
+          <iframe
+            ref={iframeRef}
+            id="yt-player"
+            title={t.watch.title}
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1&rel=0&playsinline=1&modestbranding=1&origin=${encodeURIComponent(origin)}`}
+            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allowFullScreen
+          />
+        </div>
+      ) : (
+        <p className="error" role="alert">{t.watch.noVideo}</p>
+      )}
+      {videoId && <p className="watched">{t.watch.watched(Math.floor(fraction * 100))}</p>}
       <button
         className="primary"
         type="button"

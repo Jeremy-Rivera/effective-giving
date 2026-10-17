@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:e2e": "NEXT_PUBLIC_VIDEO_CONTROL_ID=TESTCONTROL1 NEXT_PUBLIC_VIDEO_TREATMENT_ID=TESTTREATMT1 next build && playwright test"
+    "test:e2e": "NEXT_PUBLIC_VIDEO_CONTROL_ID=TESTCONTRL1 NEXT_PUBLIC_VIDEO_TREATMENT_ID=TESTTREATM1 next build && playwright test"
   },
   "dependencies": {
     "next": "14.2.15",

@@ -112,7 +112,10 @@ export const hi: Dictionary = {
   watch: {
     title: "कृपया यह छोटा वीडियो देखें",
     lede: "वीडियो के अंत के निकट \u201cआगे बढ़ें\u201d बटन उपलब्ध हो जाएगा।",
-    noVideo: "कोई वीडियो ID कॉन्फ़िगर नहीं है। NEXT_PUBLIC_VIDEO_CONTROL_ID और NEXT_PUBLIC_VIDEO_TREATMENT_ID सेट करें।",
+    // NEEDS NATIVE REVIEW
+    noVideo: "वीडियो लोड नहीं हो सका। कृपया पेज को रीफ़्रेश करें। यदि फिर भी दिखाई न दे, तो नीचे दिए गए शोधकर्ताओं से संपर्क करें।",
+    // NEEDS NATIVE REVIEW
+    watched: (pct) => `${pct}% देखा गया`,
     cont: "दान पोर्टल की ओर बढ़ें",
   },
   give: {

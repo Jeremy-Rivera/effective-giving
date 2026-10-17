@@ -112,7 +112,10 @@ export const gu: Dictionary = {
   watch: {
     title: "કૃપા કરીને આ ટૂંકો વિડિયો જુઓ",
     lede: "વિડિયોના અંત નજીક \u201cઆગળ વધો\u201d બટન ઉપલબ્ધ થશે.",
-    noVideo: "કોઈ વિડિયો ID ગોઠવેલ નથી. NEXT_PUBLIC_VIDEO_CONTROL_ID અને NEXT_PUBLIC_VIDEO_TREATMENT_ID સેટ કરો.",
+    // NEEDS NATIVE REVIEW
+    noVideo: "વિડિયો લોડ થઈ શક્યો નથી. કૃપા કરીને પેજ રિફ્રેશ કરો. જો હજી પણ ન દેખાય, તો નીચે આપેલા સંશોધકોનો સંપર્ક કરો.",
+    // NEEDS NATIVE REVIEW
+    watched: (pct) => `${pct}% જોયું`,
     cont: "દાન પોર્ટલ તરફ આગળ વધો",
   },
   give: {

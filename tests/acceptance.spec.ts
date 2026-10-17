@@ -1,6 +1,7 @@
 import { test, expect, type Page, type Request } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { ORGS } from "../lib/orgs";
+import { youTubeId } from "../lib/youtube";
 
 // Acceptance tests from the feedback brief, section 9 (numbered to match).
 
@@ -9,18 +10,18 @@ const rows = async () => (await (await fetch(`${FAKE}/__test/rows`)).json()) as 
   responses: Record<string, any>[]; emails: Record<string, any>[]; exported: Record<string, any>[];
 };
 const reset = () => fetch(`${FAKE}/__test/reset`, { method: "POST" });
-const EA = new Set(ORGS.filter((o) => o.ea).map((o) => o.id));
+const EA = new Set<string>(ORGS.filter((o) => o.ea).map((o) => o.id));
 
 // Stand-in for the YouTube IFrame API: a 20 s video. `mode: "play"` plays at
 // 10x; `mode: "seek"` jumps straight to 19 s, as if the slider were dragged.
 async function fakeYouTube(page: Page, mode: "play" | "seek" = "play") {
+  await page.route(/youtube-nocookie\.com\/embed\//, (route) => route.fulfill({ contentType: "text/html", body: "<html><body>video</body></html>" }));
   await page.route("https://www.youtube.com/iframe_api", (route) =>
     route.fulfill({
       contentType: "text/javascript",
       body: `
-        window.YT = { PlayerState: { ENDED: 0, PLAYING: 1 }, Player: function (id, opts) {
-          var el = document.getElementById(id), f = document.createElement("iframe");
-          f.id = id; f.title = "video"; el.replaceWith(f);
+        window.YT = { PlayerState: { ENDED: 0, PLAYING: 1 }, Player: function (el) {
+          if (!(el instanceof HTMLIFrameElement)) throw new Error("expected the embed iframe");
           var start = Date.now(), mode = ${JSON.stringify(mode)};
           this.getDuration = function () { return 20; };
           this.getPlaybackRate = function () { return mode === "play" ? 10 : 1; };
@@ -130,8 +131,8 @@ test("1. control and treatment runs each write one response and one unlinked ema
     expect(r.baseline.email).toBeUndefined();
   }
   // `npm run test:e2e` builds with these ids.
-  expect(byCond.control.video_id).toBe("TESTCONTROL1");
-  expect(byCond.treatment.video_id).toBe("TESTTREATMT1");
+  expect(byCond.control.video_id).toBe("TESTCONTRL1");
+  expect(byCond.treatment.video_id).toBe("TESTTREATM1");
   expect(exported).toHaveLength(2);
   expect(exported[0]).toHaveProperty("org01_dollars");
   expect(exported[0]).toHaveProperty("f2_top_choice");
@@ -420,4 +421,32 @@ test("video gate: seeking ahead does not unlock Continue", async ({ page }) => {
   await page.goto("/watch");
   await page.waitForTimeout(3000);
   await expect(page.getByRole("button", { name: "Continue to the giving portal" })).toBeDisabled();
+});
+
+test("video links: any YouTube link format or a bare id works", () => {
+  for (const input of [
+    "NIOSrCD-yIM",
+    " https://youtu.be/NIOSrCD-yIM?si=AbCdEf ",
+    "https://www.youtube.com/watch?v=NIOSrCD-yIM&t=10s",
+    "https://m.youtube.com/watch?v=NIOSrCD-yIM",
+    "https://www.youtube.com/embed/NIOSrCD-yIM",
+    "https://www.youtube.com/shorts/NIOSrCD-yIM",
+    "https://www.youtube-nocookie.com/embed/NIOSrCD-yIM?rel=0",
+  ]) expect(youTubeId(input)).toBe("NIOSrCD-yIM");
+  for (const input of ["", "REPLACE_ME", "https://vimeo.com/123", "https://youtube.com/watch?v=short", undefined])
+    expect(youTubeId(input)).toBe("");
+});
+
+test("video embed: real YouTube iframe with related videos off, Continue locked at start", async ({ page }) => {
+  await page.route(/youtube-nocookie\.com\/embed\//, (route) => route.fulfill({ contentType: "text/html", body: "<html></html>" }));
+  await page.route("https://www.youtube.com/iframe_api", (route) => route.fulfill({ contentType: "text/javascript", body: "" }));
+  await consent(page);
+  await page.goto("/watch");
+  const src = await page.locator(".video-frame iframe").getAttribute("src");
+  expect(src).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/TESTCONTRL1|^https:\/\/www\.youtube-nocookie\.com\/embed\/TESTTREATM1/);
+  expect(src).toContain("rel=0");
+  expect(src).toContain("enablejsapi=1");
+  await page.waitForTimeout(1500);
+  await expect(page.getByRole("button", { name: "Continue to the giving portal" })).toBeDisabled();
+  await expect(page.locator(".watched")).toHaveText("0% watched");
 });
