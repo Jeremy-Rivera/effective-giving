@@ -140,6 +140,8 @@ export const hi: Dictionary = {
     // NEEDS NATIVE REVIEW
     yourGift: "आपका दान",
     // NEEDS NATIVE REVIEW
+    photo: "फ़ोटो",
+    // NEEDS NATIVE REVIEW
     errAmount: "कृपया $1 से $1,000 के बीच पूरे डॉलर की राशि दर्ज करें।",
     // NEEDS NATIVE REVIEW
     errOver: (n) => `यह आपकी शेष राशि से अधिक है। ${n} शेष।`,

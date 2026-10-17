@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { orgById } from "@/lib/orgs";
+import { useT } from "@/lib/i18n";
 
 // Shows /public/orgs/<id>.jpg once it exists; until then (or if it fails to
 // load) a neutral block with the organization name, so nothing looks broken.
 export default function OrgImage({ id, name, large }: { id: string; name: string; large?: boolean }) {
   const [state, setState] = useState<"loading" | "loaded" | "failed">("loading");
-  const alt = orgById(id)?.imageAlt ?? "";
+  const { t } = useT();
+  const org = orgById(id);
+  const alt = org?.imageAlt ?? "";
 
-  return (
+  const image = (
     <div className={`org-image${large ? " large" : ""}`}>
       {state !== "loaded" && <div className="placeholder" aria-hidden="true">{name}</div>}
       {state !== "failed" && (
@@ -24,5 +27,13 @@ export default function OrgImage({ id, name, large }: { id: string; name: string
         />
       )}
     </div>
+  );
+  if (!large || !org?.credit || state === "failed") return image;
+  // Plain text on purpose: a link here would let participants leave the study.
+  return (
+    <figure className="org-figure">
+      {image}
+      <figcaption className="credit">{t.give.photo}: {org.credit}</figcaption>
+    </figure>
   );
 }

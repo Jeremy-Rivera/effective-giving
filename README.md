@@ -43,7 +43,9 @@ The Hindi and Gujarati consent text has not been reviewed by a native speaker. H
 
 ## Organization images
 
-Put one image per organization at `public/orgs/org01.jpg` ... `public/orgs/org12.jpg` (the ids in `lib/orgs.ts`). Until a file exists, the card shows a neutral placeholder with the organization name. Set each organization's `imageAlt` in `lib/orgs.ts` to a short, neutral description; leave it empty if the image is purely decorative.
+One image per organization lives at `public/orgs/org01.jpg` ... `org12.jpg` (the ids in `lib/orgs.ts`). All twelve are openly licensed photos from Wikimedia Commons; sources, authors and licenses are in `public/orgs/CREDITS.md`. Each organization's `imageAlt` and `credit` (shown as plain text under the enlarged image, as CC BY and CC BY-SA require) are in `lib/orgs.ts`. If a file is missing, the card shows a neutral placeholder with the organization name.
+
+To replace an image, overwrite the file, then update `imageAlt`, `credit` and the CREDITS.md row.
 
 Image requirements:
 
@@ -52,7 +54,7 @@ Image requirements:
 - No tattoos
 - No identifiable logos of real organizations
 - No depictions of religious figures
-- Landscape, roughly 16:9, at least 1200 px wide, under 300 KB
+- Landscape, roughly 16:9 or 3:2, 1200 px wide, under about 400 KB
 
 ## Storage
 

@@ -35,7 +35,7 @@ export type Dictionary = {
     title: string; lede: string; hypothetical: string; balance: string;
     remaining: (n: string) => string; complete: string;
     readMore: string; confirm: string; change: string; remove: string; close: string;
-    amountLabel: string; yourGift: string;
+    amountLabel: string; yourGift: string; photo: string;
     errAmount: string; errOver: (remaining: string) => string; errMaxGifts: string;
     continueReason: (remaining: string) => string; giftsChosen: (n: number) => string;
     review: string;

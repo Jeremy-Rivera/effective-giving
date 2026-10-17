@@ -140,6 +140,8 @@ export const gu: Dictionary = {
     // NEEDS NATIVE REVIEW
     yourGift: "તમારું દાન",
     // NEEDS NATIVE REVIEW
+    photo: "ફોટો",
+    // NEEDS NATIVE REVIEW
     errAmount: "કૃપા કરીને $1 થી $1,000 વચ્ચેની પૂરા ડોલરની રકમ દાખલ કરો.",
     // NEEDS NATIVE REVIEW
     errOver: (n) => `આ તમારી બાકી રકમ કરતાં વધુ છે. ${n} બાકી.`,

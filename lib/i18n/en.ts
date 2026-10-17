@@ -128,6 +128,7 @@ export const en: Dictionary = {
     close: "Close",
     amountLabel: "Gift amount in whole dollars ($1 to $1,000)",
     yourGift: "Your gift",
+    photo: "Photo",
     errAmount: "Enter a whole-dollar amount from $1 to $1,000.",
     errOver: (n) => `That is more than you have left. ${n} remaining.`,
     errMaxGifts: "You can give to at most three organizations. Remove or change a gift to add another.",
