@@ -1,4 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { isVisible } from "../lib/answers";
+import type { Section } from "../lib/i18n/types";
 
 // Shared by acceptance.spec.ts and mobile.spec.ts.
 
@@ -127,3 +129,17 @@ export async function fullRun(page: Page, condition: "control" | "treatment", em
   await watch(page);
   await giveAndFinish(page);
 }
+
+// A full set of answers, as the browser would send them (first option of each
+// question; follow-ups included only when their condition holds).
+export function completeAnswers(sections: Section[]) {
+  const v: Record<string, unknown> = {};
+  for (const sec of sections)
+    for (const q of sec.questions) {
+      if (q.id === "email" || !isVisible(q, v)) continue;
+      v[q.id] = q.type === "radio" ? q.options[0] : q.type === "checkbox" ? [q.options[0]] : q.type === "scale" ? 4
+        : q.type === "text" ? (q.inputType === "number" ? "5" : "text") : "An answer";
+    }
+  return v;
+}
+

@@ -2,10 +2,8 @@ import { test, expect, type Request } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { ORGS } from "../lib/orgs";
 import { en } from "../lib/i18n/en";
-import { isVisible } from "../lib/answers";
-import type { Section } from "../lib/i18n/types";
 import {
-  FAKE, answerEverything, card, consent, continueButton, counter, expand, fakeYouTube, fullRun, give, giveAndFinish,
+  FAKE, answerEverything, completeAnswers, card, consent, continueButton, counter, expand, fakeYouTube, fullRun, give, giveAndFinish,
   reset, rows, session, setCondition, survey, useTap, watch,
 } from "./helpers";
 
@@ -16,19 +14,6 @@ test.beforeEach(async () => { useTap(false); await reset(); });
 
 const EA = new Set<string>(ORGS.filter((o) => o.ea).map((o) => o.id));
 const name = (id: string) => ORGS.find((o) => o.id === id)!.name;
-
-// A full set of answers, as the browser would send them (first option of each
-// question; follow-ups included only when their condition holds).
-function completeAnswers(sections: Section[]) {
-  const v: Record<string, unknown> = {};
-  for (const sec of sections)
-    for (const q of sec.questions) {
-      if (q.id === "email" || !isVisible(q, v)) continue;
-      v[q.id] = q.type === "radio" ? q.options[0] : q.type === "checkbox" ? [q.options[0]] : q.type === "scale" ? 4
-        : q.type === "text" ? (q.inputType === "number" ? "5" : "text") : "An answer";
-    }
-  return v;
-}
 
 const SHOWN = { shownScenarios: [1, 2, 3, 4], shownOrgIds: ["org01", "org02", "org04", "org03", "org05", "org06", "org08", "org07"] };
 

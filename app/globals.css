@@ -23,10 +23,10 @@
   --tap: 48px;
   /* Light only: phones in automatic dark mode must not invert the page. */
   color-scheme: light;
-  font-family: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-family: var(--font-latin), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
 }
-html[lang="hi"] { font-family: "Noto Serif Devanagari", "Source Serif 4", "Nirmala UI", "Kohinoor Devanagari", Georgia, serif; }
-html[lang="gu"] { font-family: "Noto Serif Gujarati", "Source Serif 4", "Nirmala UI", "Gujarati Sangam MN", Georgia, serif; }
+html[lang="hi"] { font-family: var(--font-devanagari), var(--font-latin), "Nirmala UI", "Kohinoor Devanagari", Georgia, serif; }
+html[lang="gu"] { font-family: var(--font-gujarati), var(--font-latin), "Nirmala UI", "Gujarati Sangam MN", Georgia, serif; }
 html[lang="hi"] body, html[lang="gu"] body { line-height: 1.75; }
 
 * { box-sizing: border-box; }
@@ -105,6 +105,9 @@ header.masthead {
 
 main {
   max-width: var(--measure);
+  /* Pages that wait for the session render a moment later; the reserved
+     height keeps the footer from jumping (layout shift). */
+  min-height: calc(100dvh - 7rem);
   margin: 0 auto;
   padding: 1.5rem var(--gutter) 3rem;
 }

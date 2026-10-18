@@ -20,6 +20,7 @@ export default defineConfig({
     { name: "acceptance", testMatch: /acceptance\.spec\.ts/, use: { browserName: "chromium" } },
     { name: "mobile-chromium", testMatch: /mobile\.spec\.ts/, use: { browserName: "chromium" } },
     { name: "mobile-webkit", testMatch: /mobile\.spec\.ts/, use: { browserName: "webkit" } },
+    { name: "load", testMatch: /load\.spec\.ts/ },
   ],
   webServer: [
     {
