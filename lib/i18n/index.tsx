@@ -22,7 +22,8 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("en");
 
   useEffect(() => {
-    const saved = localStorage.getItem(KEY) as Locale | null;
+    let saved: Locale | null = null;
+    try { saved = localStorage.getItem(KEY) as Locale | null; } catch { /* storage blocked */ }
     if (saved && locales.includes(saved)) setLocaleState(saved);
   }, []);
 
@@ -31,7 +32,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   }, [locale]);
 
   function setLocale(l: Locale) {
-    localStorage.setItem(KEY, l);
+    try { localStorage.setItem(KEY, l); } catch { /* storage blocked: still switch for this page */ }
     setLocaleState(l);
   }
 

@@ -11,6 +11,7 @@ export default function DonePage() {
     <>
       <h1>{t.done.title}</h1>
       <p>{t.done.body}</p>
+      <p>{t.done.reminders}</p>
       <p>
         {t.done.contactLead} <a href="mailto:jwhenry@usf.edu">jwhenry@usf.edu</a>, <a href="mailto:ajchauradia@usf.edu">ajchauradia@usf.edu</a>
       </p>

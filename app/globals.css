@@ -1,3 +1,6 @@
+/* Mobile first: most participants arrive by scanning a QR code on a phone.
+   Every tappable control is at least 48 x 48 px; nothing depends on hover. */
+
 :root {
   --white: #fdfdfb;
   --ivory: #f7f5ef;
@@ -7,17 +10,23 @@
   --saffron: #d9822b;
   --saffron-deep: #a8611c;
   --maroon: #6f1f28;
+  --maroon-tint: #f6ebe9;
   --green: #1f7a4a;
+  --error: #9b2a1f;
   --flag-red: #d6232a;
   --flag-yellow: #f2a900;
   --flag-white: #ffffff;
   --flag-green: #1b8a4c;
   --flag-blue: #1f3b8a;
   --measure: 42rem;
-  font-family: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --gutter: 1rem;
+  --tap: 48px;
+  /* Light only: phones in automatic dark mode must not invert the page. */
+  color-scheme: light;
+  font-family: var(--font-latin), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
 }
-html[lang="hi"] { font-family: "Noto Serif Devanagari", "Source Serif 4", Georgia, serif; }
-html[lang="gu"] { font-family: "Noto Serif Gujarati", "Source Serif 4", Georgia, serif; }
+html[lang="hi"] { font-family: var(--font-devanagari), var(--font-latin), "Nirmala UI", "Kohinoor Devanagari", Georgia, serif; }
+html[lang="gu"] { font-family: var(--font-gujarati), var(--font-latin), "Nirmala UI", "Gujarati Sangam MN", Georgia, serif; }
 html[lang="hi"] body, html[lang="gu"] body { line-height: 1.75; }
 
 * { box-sizing: border-box; }
@@ -30,6 +39,21 @@ html, body {
   font-size: 17px;
   line-height: 1.6;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body { min-height: 100dvh; }
+/* On /give, keep anything scrolled or tabbed into view clear of the sticky
+   bottom bar (focus is never hidden behind it). */
+html:has(.basket) { scroll-padding-bottom: 11rem; }
+header, main, footer { overflow-wrap: anywhere; hyphens: manual; }
+img { max-width: 100%; }
+
+button, input, label, select, textarea, a { touch-action: manipulation; -webkit-tap-highlight-color: rgba(111, 31, 40, 0.12); }
+
+/* Not sticky on purpose: a fixed badge would cover the question at the top. */
+.test-badge {
+  background: #b3261e; color: #fff; text-align: center;
+  font: 600 0.85rem/1.4 system-ui, sans-serif; letter-spacing: 0.08em; padding: 0.3rem var(--gutter);
 }
 
 /* Five-colour band: the Jain flag colours, used once, at the top of every page. */
@@ -44,178 +68,256 @@ html, body {
 header.masthead {
   max-width: var(--measure);
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 0;
+  padding: 1rem var(--gutter) 0;
 }
-.masthead-row {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  flex-wrap: wrap;
-}
-.masthead-text { flex: 1 1 12rem; }
-.institution { font-weight: 600; font-size: 1.15rem; line-height: 1.3; color: var(--maroon); }
-.unit { font-size: 0.9rem; color: var(--ink-soft); }
+.masthead-row { display: flex; align-items: center; gap: 0.5rem 0.9rem; flex-wrap: wrap; }
+.masthead-text { flex: 1 1 12rem; min-width: 0; }
+.institution { font-weight: 600; font-size: 1.1rem; line-height: 1.3; color: var(--maroon); }
 .protocol {
-  margin-top: 0.9rem;
-  padding: 0.6rem 0;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0;
   border-top: 1px solid var(--rule);
   border-bottom: 2px solid var(--maroon);
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.25rem 1rem;
   flex-wrap: wrap;
   font-size: 0.9rem;
   color: var(--ink-soft);
 }
 .protocol b { color: var(--ink); font-weight: 600; }
 
-.lang { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+.lang { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .lang button {
   font: inherit;
-  font-size: 0.9rem;
-  background: transparent;
-  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.2;
+  min-height: var(--tap);
+  min-width: var(--tap);
+  background: #fff;
+  color: var(--ink);
   border: 1px solid var(--rule);
-  border-radius: 3px;
-  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
   cursor: pointer;
 }
 .lang button.active { background: var(--maroon); color: #fff; border-color: var(--maroon); }
 
 main {
   max-width: var(--measure);
+  /* Pages that wait for the session render a moment later; the reserved
+     height keeps the footer from jumping (layout shift). */
+  min-height: calc(100dvh - 7rem);
   margin: 0 auto;
-  padding: 2.25rem 1.25rem 4rem;
+  padding: 1.5rem var(--gutter) 3rem;
 }
 
 footer.site-footer {
   max-width: var(--measure);
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 3rem;
+  padding: 1.5rem var(--gutter) calc(2.5rem + env(safe-area-inset-bottom));
   border-top: 1px solid var(--rule);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--ink-soft);
 }
 footer.site-footer p { margin: 0 0 0.5rem; }
 
-h1 { font-size: 1.9rem; line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 1rem; }
-h2 { font-size: 1.3rem; font-weight: 600; margin: 2.25rem 0 0.75rem; }
+h1 { font-size: clamp(1.5rem, 1.1rem + 2vw, 1.9rem); line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 1rem; }
+h2 { font-size: 1.25rem; line-height: 1.3; font-weight: 600; margin: 2rem 0 0.75rem; }
 h3 { font-size: 1.1rem; font-weight: 600; margin: 0 0 0.4rem; }
 p { margin: 0 0 1rem; }
 a { color: var(--maroon); }
 
-.lede { font-size: 1.1rem; color: var(--ink-soft); }
-.progress { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 1.25rem; }
+.lede { font-size: 1.05rem; color: var(--ink-soft); }
+.progress { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 1rem; }
 
 .consent-block {
-  margin-top: 2.25rem;
-  padding: 1.5rem 1.5rem 1.75rem;
+  margin-top: 2rem;
+  padding: 1.25rem var(--gutter) 1.5rem;
   background: var(--ivory);
   border: 1px solid var(--rule);
   border-left: 4px solid var(--saffron);
 }
 .consent-block h2 { margin-top: 0; }
 
-fieldset { border: 0; padding: 0; margin: 0 0 1.5rem; }
+/* Questions: the whole option row is the tap target. */
+fieldset { border: 0; padding: 0; margin: 0 0 1.5rem; min-width: 0; }
 legend { font-weight: 600; padding: 0; margin-bottom: 0.5rem; }
-.options { display: grid; gap: 0.4rem; }
-.options label { display: flex; align-items: flex-start; gap: 0.6rem; cursor: pointer; }
+.options { display: grid; gap: 0.5rem; }
+.options label {
+  display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer;
+  min-height: var(--tap); padding: 0.6rem 0.75rem;
+  background: #fff; border: 1px solid var(--rule); border-radius: 6px;
+}
+.options label:has(input:checked) { border-color: var(--maroon); background: var(--maroon-tint); }
 .options input[type="radio"], .options input[type="checkbox"] {
-  margin-top: 0.35rem; accent-color: var(--maroon); width: 1rem; height: 1rem; flex: 0 0 auto;
+  margin: 0.2rem 0 0; accent-color: var(--maroon); width: 1.25rem; height: 1.25rem; flex: 0 0 auto;
 }
 input[type="text"], input[type="email"], input[type="number"], textarea {
-  font: inherit; width: 100%; padding: 0.55rem 0.7rem;
-  border: 1px solid var(--rule); border-radius: 3px; background: #fff; color: var(--ink);
+  /* 16px or more stops iOS Safari zooming in on focus. */
+  font: inherit; font-size: max(1rem, 16px); width: 100%; min-height: var(--tap); padding: 0.6rem 0.75rem;
+  border: 1px solid #a9a49a; border-radius: 6px; background: #fff; color: var(--ink);
 }
-textarea { min-height: 6rem; resize: vertical; }
-input:focus, textarea:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--saffron); outline-offset: 2px; }
+.options label input[type="text"] { margin-top: 0.4rem; }
+textarea { min-height: 7rem; resize: vertical; }
+:focus-visible { outline: 3px solid var(--saffron-deep); outline-offset: 2px; }
+input:focus, textarea:focus { outline: 3px solid var(--saffron-deep); outline-offset: 1px; }
 
-.scale { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; margin-top: 0.4rem; }
-.scale label { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.9rem; cursor: pointer; }
-.scale input { accent-color: var(--maroon); }
-.scale-ends { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--ink-soft); margin-top: 0.25rem; }
-
-button.primary {
-  font: inherit; font-weight: 600;
-  background: var(--maroon); color: #fff;
-  border: 0; border-radius: 3px; padding: 0.8rem 1.4rem; cursor: pointer; margin-top: 0.5rem;
+/* 1 to 7 scales: four per row on narrow phones, all seven in one row once they fit. */
+.scale { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; margin-top: 0.4rem; }
+@media (min-width: 440px) { .scale { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+.scale label {
+  position: relative; display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+  min-height: var(--tap); font-size: 1rem; font-weight: 600; cursor: pointer;
+  background: #fff; border: 1px solid #a9a49a; border-radius: 6px;
 }
-button.primary:disabled { background: #b9b5ad; cursor: not-allowed; }
-button.primary:hover:not(:disabled) { background: #8a2733; }
-button.secondary {
-  font: inherit; background: transparent; color: var(--maroon);
-  border: 1px solid var(--maroon); border-radius: 3px; padding: 0.55rem 1rem; cursor: pointer;
+.scale label:has(input:checked) { background: var(--maroon); border-color: var(--maroon); color: #fff; }
+.scale label:has(input:focus-visible) { outline: 3px solid var(--saffron-deep); outline-offset: 2px; }
+.scale input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.scale-ends { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.9rem; color: var(--ink-soft); margin-top: 0.4rem; }
+.scale-ends span:last-child { text-align: right; }
+
+button.primary, button.secondary {
+  font: inherit; font-weight: 600; line-height: 1.3;
+  min-height: var(--tap); border-radius: 6px; padding: 0.75rem 1.25rem; cursor: pointer;
 }
-button.link { font: inherit; background: none; border: 0; color: var(--maroon); text-decoration: underline; cursor: pointer; padding: 0; }
+button.primary { background: var(--maroon); color: #fff; border: 0; margin-top: 0.5rem; }
+button.primary:disabled { background: #8f8a82; color: #fff; cursor: not-allowed; }
+button.primary:active:not(:disabled) { background: #8a2733; }
+button.secondary { background: #fff; color: var(--maroon); border: 2px solid var(--maroon); }
+button.secondary:active { background: var(--maroon-tint); }
+@media (max-width: 559px) {
+  main > button.primary, .survey-submit, .basket button, .submit-error button { width: 100%; }
+}
+button.link { font: inherit; background: none; border: 0; color: var(--maroon); text-decoration: underline; cursor: pointer; padding: 0.5rem 0; min-height: var(--tap); }
 
-.subtext { margin-top: 2.25rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); font-size: 0.9rem; color: var(--ink-soft); }
-.error { color: #9b2a1f; margin-top: 0.5rem; }
+.subtext { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); font-size: 0.9rem; color: var(--ink-soft); }
+.error { color: var(--error); margin-top: 0.5rem; }
+fieldset.invalid { border-left: 3px solid var(--error); padding-left: 0.75rem; }
+.field-error { margin: 0.4rem 0 0; font-size: 0.95rem; }
+.req { color: var(--error); font-weight: 400; }
+.submit-error { margin-top: 1rem; }
 
-.video-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; margin: 1.5rem 0; }
+/* Video: a reserved 16:9 box, so the page does not jump while it loads. */
+.video-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; margin: 1.25rem 0; }
 .video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.watched { font-size: 0.9rem; color: var(--ink-soft); margin: -0.5rem 0 0.5rem; }
+/* Phones in portrait: run the player edge to edge. */
+@media (max-width: 600px) {
+  .video-frame { width: calc(100% + 2 * var(--gutter)); margin-left: calc(-1 * var(--gutter)); margin-right: calc(-1 * var(--gutter)); }
+}
 
 /* Giving portal */
 .portal-hero {
   background: var(--ivory);
   border: 1px solid var(--rule);
   border-top: 4px solid var(--saffron);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 1.25rem var(--gutter);
+  margin-bottom: 1.25rem;
 }
 .portal-hero h1 { margin-bottom: 0.5rem; }
-.portal-hero .lede { margin-bottom: 0.75rem; }
-.balance { display: flex; align-items: baseline; gap: 0.6rem; margin-top: 0.75rem; }
-.balance .amount { font-size: 2rem; font-weight: 600; color: var(--maroon); }
-.balance .label { color: var(--ink-soft); }
+.portal-hero .lede { color: var(--ink); font-size: 1.1rem; margin-bottom: 0.75rem; }
 .notice { font-size: 0.9rem; color: var(--ink-soft); border-left: 3px solid var(--saffron); padding-left: 0.75rem; margin: 1rem 0 0; }
 
-.org-card {
-  background: #fff;
-  border: 1px solid var(--rule);
-  padding: 1.25rem 1.25rem 1.1rem;
-  margin-bottom: 1rem;
+/* One card per row at every width. */
+.org-list { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.org-card { background: #fff; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.org-card.given { border-color: var(--green); box-shadow: inset 4px 0 0 var(--green); }
+.org-heading { margin: 0; font-size: inherit; font-weight: inherit; }
+.org-head {
+  display: grid; grid-template-columns: minmax(5.5rem, 30%) 1fr; gap: 0.9rem; align-items: start;
+  width: 100%; padding: 0.9rem; min-height: var(--tap);
+  font: inherit; color: inherit; text-align: left; background: transparent; border: 0; cursor: pointer;
 }
-.org-card.given { border-left: 4px solid var(--green); }
-.org-card .cause { font-size: 0.85rem; color: var(--saffron-deep); margin-bottom: 0.2rem; }
-.org-card .detail { margin: 0.25rem 0; }
-.org-card .detail b { font-weight: 600; }
-.org-card .given-line { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--rule); }
-.org-card .given-line .amt { font-weight: 600; color: var(--green); }
-.org-card .actions { margin-top: 0.75rem; }
+.org-head:active { background: var(--ivory); }
+.org-head-text { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+.org-name { font-size: 1.1rem; font-weight: 600; line-height: 1.3; }
+.org-summary { color: var(--ink-soft); }
+.org-gift { font-weight: 600; color: var(--green); }
+.org-toggle { color: var(--maroon); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.org-toggle .chev { display: inline-block; font-size: 0.75em; text-decoration: none; }
+/* Very narrow screens or very large text: photo above the text. */
+@media (max-width: 359px) { .org-head { grid-template-columns: 1fr; } }
+.org-panel { padding: 0 0.9rem 1rem; border-top: 1px solid var(--rule); }
+.org-panel .full-description { margin-top: 1rem; font-size: 1.05rem; }
+.org-panel .credit { font-size: 0.8rem; color: var(--ink-soft); margin: 0.75rem 0 0; }
 
-.chooser { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px dashed var(--rule); }
-.presets { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.presets button {
-  font: inherit; font-weight: 600;
-  background: var(--ivory); color: var(--ink);
-  border: 1px solid var(--rule); border-radius: 3px; padding: 0.5rem 0.9rem; cursor: pointer;
+.org-image { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; background: var(--ivory); overflow: hidden; border-radius: 4px; }
+.org-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.org-image img.pending { opacity: 0; }
+.org-image .placeholder {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+  padding: 0.4rem; font-size: 0.75rem; line-height: 1.2; color: var(--ink-soft);
+  background: repeating-linear-gradient(135deg, var(--ivory) 0 12px, #efece4 12px 24px);
 }
-.presets button.active, .presets button:hover { border-color: var(--maroon); background: #fff; }
-.custom { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.6rem; }
-.custom input { max-width: 10rem; }
-.chooser .confirm-row { display: flex; gap: 0.6rem; align-items: center; margin-top: 0.75rem; flex-wrap: wrap; }
-.chooser .confirm-row button.primary { margin-top: 0; }
 
+/* Amount buttons: No thanks across the top, then two per row; five across on wide screens. */
+.amounts { margin: 1rem 0 0; padding: 1rem 0 0; border-top: 1px dashed var(--rule); }
+.amount-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.amount-grid .none { grid-column: 1 / -1; }
+@media (min-width: 560px) {
+  .amount-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .amount-grid .none { grid-column: auto; }
+}
+.amount {
+  position: relative; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  min-height: 52px; padding: 0.5rem; text-align: center;
+  font-weight: 600; font-size: 1.05rem; cursor: pointer;
+  background: #fff; color: var(--maroon); border: 2px solid var(--maroon); border-radius: 6px;
+}
+.amount input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.amount .mark { display: none; }
+.amount.selected { background: var(--maroon); color: #fff; box-shadow: 0 0 0 2px var(--white), 0 0 0 4px var(--maroon); }
+.amount.selected .mark { display: inline; }
+.amount:active:not(.disabled) { background: var(--maroon-tint); }
+.amount.selected:active { background: #8a2733; }
+.amount:has(input:focus-visible) { outline: 3px solid var(--saffron-deep); outline-offset: 3px; }
+.amount.disabled { background: #eeece7; color: #5a5651; border: 2px dashed #8f8a82; cursor: not-allowed; }
+.amount.disabled input { cursor: not-allowed; }
+.amount-reason { margin: 0.6rem 0 0; font-size: 0.95rem; color: var(--ink); }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Running total and Continue: stays on screen at the bottom while scrolling,
+   above the iPhone home indicator, and ends in normal flow after the last
+   card, so it never covers it. */
 .basket {
   position: sticky;
   bottom: 0;
+  z-index: 5;
   background: var(--white);
   border-top: 2px solid var(--maroon);
-  padding: 0.9rem 0;
-  margin-top: 1.25rem;
+  box-shadow: 0 -6px 12px -8px rgba(35, 33, 31, 0.35);
+  margin: 1.25rem calc(-1 * var(--gutter)) 0;
+  padding: 0.75rem var(--gutter) calc(0.75rem + env(safe-area-inset-bottom));
 }
-.basket .row { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.basket .status { font-weight: 600; }
-.basket .status.over { color: #9b2a1f; }
+.basket .row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem 0.75rem; flex-wrap: wrap; }
+.basket .tally { min-width: 0; }
+.basket .status { display: block; font-weight: 600; font-size: 1.05rem; }
+.basket .count { display: block; font-size: 0.9rem; color: var(--ink-soft); }
+.basket .reason { margin: 0.4rem 0 0; font-size: 0.9rem; color: var(--ink); }
 .basket .status.complete { color: var(--green); }
 .basket button.primary { margin-top: 0; }
+.basket button.secondary { flex: 1 1 auto; }
+/* Short landscape phones: keep the bar compact. */
+@media (max-height: 480px) {
+  .basket { position: static; }
+}
 
 .receipt { border: 1px solid var(--rule); background: #fff; margin: 1rem 0 1.5rem; }
-.receipt .line { display: flex; justify-content: space-between; gap: 1rem; padding: 0.7rem 1rem; border-bottom: 1px solid var(--rule); }
+.receipt .line { display: flex; justify-content: space-between; gap: 1rem; padding: 0.7rem var(--gutter); border-bottom: 1px solid var(--rule); }
+.receipt .line span:first-child { min-width: 0; }
+.receipt .line span:last-child { white-space: nowrap; }
 .receipt .line:last-child { border-bottom: 0; }
 .receipt .line.total { background: var(--ivory); font-weight: 600; }
-.receipt .ref { font-size: 0.85rem; color: var(--ink-soft); padding: 0.6rem 1rem; border-bottom: 1px solid var(--rule); }
+.receipt .ref { font-size: 0.85rem; color: var(--ink-soft); padding: 0.6rem var(--gutter); border-bottom: 1px solid var(--rule); }
+
+@media (min-width: 560px) {
+  :root { --gutter: 1.25rem; }
+  main { padding-top: 2.25rem; padding-bottom: 4rem; }
+}
 
 @media (prefers-reduced-motion: no-preference) {
-  button.primary, .presets button { transition: background 120ms ease, border-color 120ms ease; }
+  /* Choices change instantly (no fade), so a selected button is never caught half-drawn. */
+  .options label { transition: border-color 120ms ease; }
 }
