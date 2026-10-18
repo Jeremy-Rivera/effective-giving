@@ -76,7 +76,7 @@ test("1. control and treatment runs each write one response and one unlinked ema
   expect(byCond.control.video_id).toBe("TESTCONTRL1");
   expect(byCond.treatment.video_id).toBe("TESTTREATM1");
   expect(exported).toHaveLength(2);
-  for (const col of ["org14_dollars", "allocation_total", "shown_scenarios", "expanded_org_ids", "assignment_method", "is_test", "design_version", "f2_gave_most_to_org_id"])
+  for (const col of ["org14_climate_solutions_initiative_dollars", "org04_global_malaria_initiative_dollars", "allocation_total", "shown_scenarios", "expanded_org_ids", "assignment_method", "is_test", "design_version", "f2_gave_most_to_org_id"])
     expect(exported[0]).toHaveProperty(col);
 });
 

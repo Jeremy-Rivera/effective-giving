@@ -40,18 +40,18 @@ create table if not exists public.responses (
   funded_org_ids          text[],                    -- organizations given money, in shown order
   funded_orgs             text,                      -- e.g. "Gau Seva Trust: $600; Global Malaria Initiative: $400"
   shown_orgs              text,                      -- names of the organizations shown, in order
-  org01_dollars           integer not null default 0, -- Global Malaria Initiative
-  org02_dollars           integer not null default 0, -- Ahimsa Education Trust
-  org03_dollars           integer not null default 0, -- Pandemic Preparedness Network
-  org04_dollars           integer not null default 0, -- Jiva Daya Animal Trust
-  org05_dollars           integer not null default 0, -- AI Health Research Initiative
-  org06_dollars           integer not null default 0, -- Living Earth Foundation
-  org07_dollars           integer not null default 0, -- Global Outbreak Surveillance Alliance
-  org08_dollars           integer not null default 0, -- Jain Community Learning Centers
-  org09_dollars           integer not null default 0, -- Global Nuclear Risk Institute
-  org10_dollars           integer not null default 0, -- Gau Seva Trust
-  org11_dollars           integer not null default 0, -- Future Humanity Foundation
-  org12_dollars           integer not null default 0  -- Compassion in Action Foundation
+  org01_dollars           integer not null default 0, -- Somalia Education Initiative (v1 rows: a different organization)
+  org02_dollars           integer not null default 0, -- Ahimsa Education Trust (v1 rows: a different organization)
+  org03_dollars           integer not null default 0, -- Pandemic Preparedness Network (v1 rows: a different organization)
+  org04_dollars           integer not null default 0, -- Global Malaria Initiative (v1 rows: a different organization)
+  org05_dollars           integer not null default 0, -- Jiva Daya Water Stewardship Initiative (v1 rows: a different organization)
+  org06_dollars           integer not null default 0, -- Gau Seva Trust (v1 rows: a different organization)
+  org07_dollars           integer not null default 0, -- Global Nuclear Risk Institute (v1 rows: a different organization)
+  org08_dollars           integer not null default 0, -- Compassion in Action Foundation (v1 rows: a different organization)
+  org09_dollars           integer not null default 0, -- Future Humanity Foundation (v1 rows: a different organization)
+  org10_dollars           integer not null default 0, -- Global Outbreak Surveillance Alliance (v1 rows: a different organization)
+  org11_dollars           integer not null default 0, -- Health Research Initiative (v1 rows: a different organization)
+  org12_dollars           integer not null default 0  -- Living Earth Foundation (v1 rows: a different organization)
 );
 
 -- Columns added after the first release (no-ops on a fresh install).
@@ -78,8 +78,8 @@ alter table public.responses
 -- condition assignment, and test mode. Rows saved before this release keep
 -- design_version 'v1-12orgs'; do not mix them into analysis.
 alter table public.responses
-  add column if not exists org13_dollars     integer not null default 0,
-  add column if not exists org14_dollars     integer not null default 0,
+  add column if not exists org13_dollars     integer not null default 0, -- AI Data Center Initiative
+  add column if not exists org14_dollars     integer not null default 0, -- Climate Solutions Initiative
   add column if not exists shown_scenarios   integer[],                    -- the 4 scenarios (1 to 7), in the order shown
   add column if not exists expanded_org_ids  text[],                       -- cards the participant opened to read in full
   add column if not exists allocation_total  integer,                      -- 1001, 1002 or 1003
@@ -245,21 +245,21 @@ select
   r.non_ea_dollars,
   r.ea_share,
   r.jain_values_dollars,
-  -- Named orgNN_dollars until AJ's organization names are in lib/orgs.ts.
-  r.org01_dollars,
-  r.org02_dollars,
-  r.org03_dollars,
-  r.org04_dollars,
-  r.org05_dollars,
-  r.org06_dollars,
-  r.org07_dollars,
-  r.org08_dollars,
-  r.org09_dollars,
-  r.org10_dollars,
-  r.org11_dollars,
-  r.org12_dollars,
-  r.org13_dollars,
-  r.org14_dollars,
+  -- v2 organizations (lib/orgs.ts). v1 rows used different organizations under org01 to org12.
+  r.org01_dollars as org01_somalia_education_initiative_dollars,
+  r.org02_dollars as org02_ahimsa_education_trust_dollars,
+  r.org03_dollars as org03_pandemic_preparedness_network_dollars,
+  r.org04_dollars as org04_global_malaria_initiative_dollars,
+  r.org05_dollars as org05_jiva_daya_water_stewardship_initiative_dollars,
+  r.org06_dollars as org06_gau_seva_trust_dollars,
+  r.org07_dollars as org07_global_nuclear_risk_institute_dollars,
+  r.org08_dollars as org08_compassion_in_action_foundation_dollars,
+  r.org09_dollars as org09_future_humanity_foundation_dollars,
+  r.org10_dollars as org10_global_outbreak_surveillance_alliance_dollars,
+  r.org11_dollars as org11_health_research_initiative_dollars,
+  r.org12_dollars as org12_living_earth_foundation_dollars,
+  r.org13_dollars as org13_ai_data_center_initiative_dollars,
+  r.org14_dollars as org14_climate_solutions_initiative_dollars,
   r.shown_orgs,
   array_to_string(r.funded_org_ids, ';') as funded_org_ids,
   array_to_string(r.shown_org_ids, ';') as shown_org_ids,

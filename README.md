@@ -34,7 +34,7 @@ All copy lives in `lib/i18n/en.ts`, `hi.ts`, and `gu.ts`. Each file holds the co
 - Consent and landing text: `lib/i18n/*.ts` under `landing`
 - Survey items: `lib/i18n/*.ts` under `survey.sections` and `post.sections`
 - Organizations (English text, EA flags, image alt text): `lib/orgs.ts`; Hindi and Gujarati under `orgs` in `lib/i18n/hi.ts` and `gu.ts`
-- Scenario pairs, A/B and EA flags: `scenario`, `variant`, `ea`, `jainValues` in `lib/orgs.ts` (the 14 entries are PLACEHOLDERS until AJ's document is pasted in)
+- Scenario pairs, A/B and EA flags: `scenario`, `variant`, `ea`, `jainValues` in `lib/orgs.ts` (verbatim from AJ's "Seven Scenarios - Revised" document)
 - Budget, amounts, gift limit and valid totals: `lib/money.ts`
 - Masthead (IRB number): `lib/i18n/*.ts` under `masthead`
 - Video IDs and watch gate: `.env.local`
