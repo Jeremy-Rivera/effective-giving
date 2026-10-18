@@ -42,13 +42,16 @@ html, body {
   text-size-adjust: 100%;
 }
 body { min-height: 100dvh; }
+/* On /give, keep anything scrolled or tabbed into view clear of the sticky
+   bottom bar (focus is never hidden behind it). */
+html:has(.basket) { scroll-padding-bottom: 11rem; }
 header, main, footer { overflow-wrap: anywhere; hyphens: manual; }
 img { max-width: 100%; }
 
 button, input, label, select, textarea, a { touch-action: manipulation; -webkit-tap-highlight-color: rgba(111, 31, 40, 0.12); }
 
+/* Not sticky on purpose: a fixed badge would cover the question at the top. */
 .test-badge {
-  position: sticky; top: 0; z-index: 20;
   background: #b3261e; color: #fff; text-align: center;
   font: 600 0.85rem/1.4 system-ui, sans-serif; letter-spacing: 0.08em; padding: 0.3rem var(--gutter);
 }
@@ -312,5 +315,6 @@ fieldset.invalid { border-left: 3px solid var(--error); padding-left: 0.75rem; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  button.primary, .amount, .options label, .scale label { transition: background 120ms ease, border-color 120ms ease; }
+  /* Choices change instantly (no fade), so a selected button is never caught half-drawn. */
+  .options label { transition: border-color 120ms ease; }
 }

@@ -70,7 +70,8 @@ export const ORGS: Org[] = Array.from({ length: 14 }, (_, i) => {
     name: `PLACEHOLDER ${pad(n)}`,
     ea: variant === "A",
     jainValues: variant === "B",
-    description: `PLACEHOLDER ${pad(n)} (scenario ${Math.ceil(n / 2)}, option ${variant}). This text stands in for organization ${n} of AJ Chauradia's document. It must be replaced with the full description, word for word, before launch.`,
+    // Never mention the scenario or variant here: participants read this text.
+    description: `Placeholder text for organization ${n} of AJ Chauradia's document. It must be replaced with the full description, word for word, before launch.`,
     imageAlt: PHOTO[id]?.imageAlt ?? "",
     credit: PHOTO[id]?.credit ?? "",
   };
