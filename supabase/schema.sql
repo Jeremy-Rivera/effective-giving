@@ -22,7 +22,7 @@ create table if not exists public.responses (
   video_watched_fraction  numeric,
   video_seconds_on_page   integer,
   video_id                text,                      -- YouTube id actually shown
-  shown_org_ids           text[] not null,           -- the 6 organizations, in the order shown
+  shown_org_ids           text[] not null,           -- organizations in the order shown (v2: 8 = 4 scenario pairs)
   allocation              jsonb not null,            -- {org_id: dollars}, funded organizations only
   allocation_confirmed_at timestamptz,
   seconds_on_allocation   integer,
@@ -33,13 +33,13 @@ create table if not exists public.responses (
   max_single_gift         integer,
   ea_dollars              integer,
   non_ea_dollars          integer,
-  ea_share                numeric,                   -- ea_dollars / 1000
+  ea_share                numeric,                   -- ea_dollars / allocation_total (v1: / 1000)
   jain_values_dollars     integer,
   top_choice_org_id       text,                      -- post-survey F2 answer
   top_choice_org_name     text,
   funded_org_ids          text[],                    -- organizations given money, in shown order
   funded_orgs             text,                      -- e.g. "Gau Seva Trust: $600; Global Malaria Initiative: $400"
-  shown_orgs              text,                      -- names of the 6 shown, in order
+  shown_orgs              text,                      -- names of the organizations shown, in order
   org01_dollars           integer not null default 0, -- Global Malaria Initiative
   org02_dollars           integer not null default 0, -- Ahimsa Education Trust
   org03_dollars           integer not null default 0, -- Pandemic Preparedness Network
@@ -73,12 +73,67 @@ alter table public.responses
   add column if not exists org11_dollars integer not null default 0,
   add column if not exists org12_dollars integer not null default 0;
 
+-- v2 (Oct 17 meeting): 7 scenarios x 2 = 14 organizations, 4 scenarios shown,
+-- amounts 251/501/751/1001 totalling $1,001 to $1,003, server-balanced
+-- condition assignment, and test mode. Rows saved before this release keep
+-- design_version 'v1-12orgs'; do not mix them into analysis.
+alter table public.responses
+  add column if not exists org13_dollars     integer not null default 0,
+  add column if not exists org14_dollars     integer not null default 0,
+  add column if not exists shown_scenarios   integer[],                    -- the 4 scenarios (1 to 7), in the order shown
+  add column if not exists expanded_org_ids  text[],                       -- cards the participant opened to read in full
+  add column if not exists allocation_total  integer,                      -- 1001, 1002 or 1003
+  add column if not exists assignment_method text,                         -- server_balanced, client_fallback or test
+  add column if not exists is_test           boolean not null default false, -- ?test=1 sessions; see delete-test-data.sql
+  add column if not exists design_version    text not null default 'v1-12orgs';
+
 create table if not exists public.contact_emails (
   email      text not null,
   -- Day precision on purpose: an exact timestamp would line up with
   -- responses.received_at and re-identify the response.
   created_at timestamptz not null default date_trunc('day', now())
 );
+-- Marks emails from ?test=1 sessions so they can be deleted. Copied from the
+-- response at insert; it does not link the two tables.
+alter table public.contact_emails add column if not exists is_test boolean not null default false;
+
+-- Balanced condition assignment (v2). One row holding two counts; no
+-- participant data. assign_condition() locks the row, so concurrent calls
+-- run one at a time and the split never drifts by more than one.
+create table if not exists public.assignment_state (
+  id          integer primary key default 1 check (id = 1),
+  n_control   integer not null default 0,
+  n_treatment integer not null default 0
+);
+insert into public.assignment_state (id) values (1) on conflict (id) do nothing;
+alter table public.assignment_state enable row level security;
+revoke all on public.assignment_state from anon, authenticated;
+
+create or replace function public.assign_condition()
+returns text
+language plpgsql
+set search_path = public
+as $$
+declare
+  s   public.assignment_state;
+  arm text;
+begin
+  select * into s from public.assignment_state where id = 1 for update;
+  if s.n_control < s.n_treatment then arm := 'control';
+  elsif s.n_treatment < s.n_control then arm := 'treatment';
+  else arm := case when random() < 0.5 then 'control' else 'treatment' end;
+  end if;
+  if arm = 'control' then
+    update public.assignment_state set n_control = n_control + 1 where id = 1;
+  else
+    update public.assignment_state set n_treatment = n_treatment + 1 where id = 1;
+  end if;
+  return arm;
+end;
+$$;
+
+revoke all on function public.assign_condition() from public, anon, authenticated;
+grant execute on function public.assign_condition() to service_role;
 
 alter table public.responses      enable row level security;
 alter table public.contact_emails enable row level security;
@@ -97,15 +152,19 @@ declare
   inserted integer;
 begin
   -- Every column of responses is filled from the JSON, so a column added later
-  -- can never be silently dropped. received_at is always the server's time.
+  -- can never be silently dropped. The defaults on the left cover NOT NULL
+  -- columns an older client does not send; received_at is always the server's.
   insert into public.responses
-  select (jsonb_populate_record(null::public.responses, p_response || jsonb_build_object('received_at', now()))).*
+  select (jsonb_populate_record(null::public.responses,
+    jsonb_build_object('is_test', false, 'design_version', 'v1-12orgs', 'org13_dollars', 0, 'org14_dollars', 0)
+    || p_response || jsonb_build_object('received_at', now()))).*
   on conflict (id) do nothing;
 
   get diagnostics inserted = row_count;
 
   if inserted = 1 and coalesce(btrim(p_email), '') <> '' then
-    insert into public.contact_emails (email) values (btrim(p_email));
+    insert into public.contact_emails (email, is_test)
+    values (btrim(p_email), coalesce((p_response->>'is_test')::boolean, false));
   end if;
 
   return inserted = 1;
@@ -170,11 +229,15 @@ select
   r.received_at,
   r.started_at,
   (r.consent->>'consentedAt')::timestamptz as consented_at,
+  r.design_version,
+  r.is_test,
   r.locale,
   r.condition,
+  r.assignment_method,
   r.viewport_bucket,
   -- Giving exercise
   r.funded_orgs,
+  r.allocation_total,
   r.n_orgs_funded,
   r.top_choice_org_name,
   r.max_single_gift,
@@ -182,21 +245,26 @@ select
   r.non_ea_dollars,
   r.ea_share,
   r.jain_values_dollars,
-  r.org01_dollars as org01_global_malaria_initiative_dollars,
-  r.org02_dollars as org02_ahimsa_education_trust_dollars,
-  r.org03_dollars as org03_pandemic_preparedness_network_dollars,
-  r.org04_dollars as org04_jiva_daya_animal_trust_dollars,
-  r.org05_dollars as org05_ai_health_research_initiative_dollars,
-  r.org06_dollars as org06_living_earth_foundation_dollars,
-  r.org07_dollars as org07_global_outbreak_surveillance_alliance_dollars,
-  r.org08_dollars as org08_jain_community_learning_centers_dollars,
-  r.org09_dollars as org09_global_nuclear_risk_institute_dollars,
-  r.org10_dollars as org10_gau_seva_trust_dollars,
-  r.org11_dollars as org11_future_humanity_foundation_dollars,
-  r.org12_dollars as org12_compassion_in_action_foundation_dollars,
+  -- Named orgNN_dollars until AJ's organization names are in lib/orgs.ts.
+  r.org01_dollars,
+  r.org02_dollars,
+  r.org03_dollars,
+  r.org04_dollars,
+  r.org05_dollars,
+  r.org06_dollars,
+  r.org07_dollars,
+  r.org08_dollars,
+  r.org09_dollars,
+  r.org10_dollars,
+  r.org11_dollars,
+  r.org12_dollars,
+  r.org13_dollars,
+  r.org14_dollars,
   r.shown_orgs,
   array_to_string(r.funded_org_ids, ';') as funded_org_ids,
   array_to_string(r.shown_org_ids, ';') as shown_org_ids,
+  array_to_string(r.shown_scenarios, ';') as shown_scenarios,
+  array_to_string(r.expanded_org_ids, ';') as expanded_org_ids,
   r.top_choice_org_id,
   r.seconds_on_allocation,
   r.allocation_confirmed_at,

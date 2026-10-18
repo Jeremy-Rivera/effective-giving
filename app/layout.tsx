@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LocaleProvider } from "@/lib/i18n";
 import SiteFrame from "@/components/SiteFrame";
@@ -7,6 +7,15 @@ export const metadata: Metadata = {
   title: "Jain Philanthropy and Effective Altruism",
   description: "A research study on charitable giving.",
   robots: { index: false, follow: false },
+};
+
+// viewport-fit=cover lets the bottom bar on /give use the safe-area insets.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  colorScheme: "light",
+  themeColor: "#fdfdfb",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

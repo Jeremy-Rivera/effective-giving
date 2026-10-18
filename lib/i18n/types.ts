@@ -31,7 +31,7 @@ export type Dictionary = {
     q1: string; q1yes: string; q1no: string;
     q2: string; q2yes: string; q2no: string;
     q3: string; q3yes: string; q3no: string;
-    consentButton: string; error: string; subtext: string;
+    consentButton: string; starting: string; error: string; subtext: string;
   };
   screenedOut: { title: string; body: string; contactLead: string };
   common: {
@@ -41,17 +41,30 @@ export type Dictionary = {
   survey: { title: string; submit: string; sections: Section[] };
   watch: { title: string; lede: string; noVideo: string; watched: (pct: number) => string; cont: string };
   give: {
-    title: string; lede: string; hypothetical: string; balance: string;
-    remaining: (n: string) => string; complete: string;
-    readMore: string; confirm: string; change: string; remove: string; close: string;
-    amountLabel: string; yourGift: string; photo: string;
-    errAmount: string; errOver: (remaining: string) => string; errMaxGifts: string;
-    continueReason: (remaining: string) => string; giftsChosen: (n: number) => string;
+    title: string;
+    // The researchers' instruction sentence, verbatim (brief section 3).
+    lede: string;
+    hypothetical: string;
+    allocated: (total: string, budget: string) => string;
+    giftsChosen: (n: number) => string;
+    ready: string;
+    continueReason: (chosen: string) => string;
+    expand: string; collapse: string;
+    amountLegend: (name: string) => string;
+    noThanks: string;
+    yourGift: string;
+    reasonMaxGifts: string;
+    reasonBudget: (left: string) => string;
+    photo: string;
     review: string;
   };
   review: { title: string; lede: string; total: string; edit: string; confirm: string };
   confirmation: { title: string; body: string; reference: string; cont: string };
-  post: { title: string; submit: string; error: string; sections: Section[] };
-  done: { title: string; body: string; contactLead: string };
-  orgs: Record<OrgId, OrgText>;
+  post: { title: string; submit: string; error: string; retry: string; sections: Section[] };
+  done: { title: string; body: string; reminders: string; contactLead: string };
+  // Blocked sessionStorage (some private modes and in-app browsers).
+  storageBlocked: string;
+  testBadge: string;
+  // Missing entries fall back to English (lib/i18n/org-text.ts).
+  orgs: Partial<Record<OrgId, OrgText>>;
 };

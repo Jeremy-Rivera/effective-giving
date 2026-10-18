@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { submissionSchema, toResponseRow } from "@/lib/submission";
+import { NotConfigured, rpc } from "@/lib/supabase";
 
 // Receives the completed session once, at the end of the flow, and stores it
 // in Supabase (supabase/schema.sql) via the submit_response() function, which
@@ -13,35 +14,19 @@ export const dynamic = "force-dynamic";
 
 type Outcome = "inserted" | "duplicate";
 
-async function persist(row: ReturnType<typeof toResponseRow>, email: string | undefined): Promise<Outcome> {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) {
-    if (process.env.NODE_ENV === "development") {
+async function persist(row: ReturnType<typeof toResponseRow>, email: string): Promise<Outcome> {
+  try {
+    return (await rpc<boolean>("submit_response", { p_response: row, p_email: email })) === true ? "inserted" : "duplicate";
+  } catch (e) {
+    if (e instanceof NotConfigured && process.env.NODE_ENV === "development") {
       console.warn(
         "\n*** SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set. Development only: the response below was NOT saved. ***\n",
       );
       console.log("SUBMISSION (not saved)", JSON.stringify(row));
       return "inserted";
     }
-    throw new Error("storage not configured");
+    throw e;
   }
-
-  const res = await fetch(`${url.replace(/\/$/, "")}/rest/v1/rpc/submit_response`, {
-    method: "POST",
-    // Legacy service_role keys are JWTs and also go in Authorization; the newer
-    // sb_secret_ keys are not JWTs and only go in apikey.
-    headers: { apikey: key, ...(key.startsWith("eyJ") ? { Authorization: `Bearer ${key}` } : {}), "Content-Type": "application/json" },
-    body: JSON.stringify({ p_response: row, p_email: email ?? null }),
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    // PostgREST error messages can echo row values, so log the code only.
-    const code = await res.json().then((b) => b?.code, () => undefined);
-    throw new Error(`supabase ${res.status}${code ? ` ${code}` : ""}`);
-  }
-  return (await res.json()) === true ? "inserted" : "duplicate";
 }
 
 export async function POST(req: Request) {
@@ -59,9 +44,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid", issues }, { status: 400 });
   }
 
-  const email = parsed.data.email;
   try {
-    const outcome = await persist(toResponseRow(parsed.data), email);
+    const outcome = await persist(toResponseRow(parsed.data), parsed.data.email);
     return NextResponse.json({ ok: true, duplicate: outcome === "duplicate" });
   } catch (e) {
     console.error("submit failed:", e instanceof Error ? e.message : "unknown error");

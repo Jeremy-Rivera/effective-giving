@@ -33,6 +33,7 @@ export const en: Dictionary = {
     q3yes: "Yes",
     q3no: "No (screen out / end survey)",
     consentButton: "Click here to consent to participate in this study",
+    starting: "Starting the survey...",
     error: "Please answer all three questions to continue.",
     subtext: "The online survey will be administered through a secure, encrypted (HTTPS/TLS) web platform. Data transmitted between participants\u2019 devices and the survey server will be encrypted in transit using industry-standard protocols. Data stored on the investigators\u2019 encrypted database does not record the respondent\u2019s IP address, though since transmission is initiated through the participant\u2019s personal digital device, internet confidentiality cannot be completely guaranteed. No personal identifying information beyond that explicitly collected for informed consent will be transmitted or stored with survey responses, and all study data will be exported promptly after data collection. Identifying information (your email) will be removed from the private responses to the survey in the process of data storage and will not be used for any other future studies without the participant\u2019s later consent.",
   },
@@ -58,7 +59,6 @@ export const en: Dictionary = {
       {
         id: "contact",
         title: "Contact",
-        instructions: "Your email is the only identifying information collected. It is removed from your responses during storage.",
         questions: [{ id: "email", type: "text", inputType: "email", text: "Email address" }],
       },
       {
@@ -120,24 +120,21 @@ export const en: Dictionary = {
   },
   give: {
     title: "Giving portal",
-    lede: "You have $1,000 to give. Read about each organization, then give to up to three of them. You may give the whole $1,000 to one organization. Please give the full $1,000 before you review and confirm.",
+    // Researchers' wording, verbatim (decision 11.4: "$1003 dollars" kept as written).
+    lede: "You may allocate up to $1003 dollars to up to three organizations (you may choose to allocate $1001 to a single organization or to distribute up to $1003 to up to three organizations).",
     hypothetical: "This is a hypothetical exercise for research. All organizations and money in this exercise are hypothetical and were created only for this study. No payment is processed and no money is sent to any organization.",
-    balance: "Available to give",
-    remaining: (n) => `${n} left to give`,
-    complete: "All $1,000 allocated",
-    readMore: "Read more",
-    confirm: "Confirm",
-    change: "Change",
-    remove: "Remove",
-    close: "Close",
-    amountLabel: "Gift amount in whole dollars ($1 to $1,000)",
-    yourGift: "Your gift",
-    photo: "Photo",
-    errAmount: "Enter a whole-dollar amount from $1 to $1,000.",
-    errOver: (n) => `That is more than you have left. ${n} remaining.`,
-    errMaxGifts: "You can give to at most three organizations. Remove or change a gift to add another.",
-    continueReason: (n) => `Allocate the full $1,000 to continue. ${n} remaining.`,
+    allocated: (total, budget) => `Allocated: ${total} of ${budget}`,
     giftsChosen: (n) => `${n} of 3 organizations chosen`,
+    ready: "Ready to review",
+    continueReason: (chosen) => `Choose amounts that total at least $1,001 (up to $1,003). You have chosen ${chosen}.`,
+    expand: "Read more and choose an amount",
+    collapse: "Hide details",
+    amountLegend: (name) => `Your gift to ${name}`,
+    noThanks: "No thanks",
+    yourGift: "Your gift",
+    reasonMaxGifts: "You have chosen three organizations. Choose No thanks on one to pick a different one.",
+    reasonBudget: (left) => `You have ${left} left to give, so larger amounts are not available.`,
+    photo: "Photo",
     review: "Review and confirm gifts",
   },
   review: {
@@ -157,6 +154,7 @@ export const en: Dictionary = {
     title: "A few final questions",
     submit: "Submit my responses",
     error: "Your responses could not be saved. Please check your connection and try again.",
+    retry: "Try again",
     sections: [
       {
         id: "F",
@@ -195,8 +193,12 @@ export const en: Dictionary = {
   done: {
     title: "Thank you for participating",
     body: "Your responses have been recorded. You may now close this window.",
+    // Draft wording (Jeremy, Oct 17); confirm with the researchers.
+    reminders: "We will reach out to you at the email address you provided with reminders and updates about this study.",
     contactLead: "If you have questions about this study, please contact",
   },
+  storageBlocked: "This browser is blocking temporary storage. Please open the link in Safari or Chrome.",
+  testBadge: "TEST SESSION",
   // English names and descriptions come straight from lib/orgs.ts (verbatim).
   orgs: Object.fromEntries(ORGS.map((o) => [o.id, { name: o.name, description: o.description }])) as Dictionary["orgs"],
 };

@@ -44,7 +44,8 @@ export default function SurveyForm({ sections, canonical, submitLabel, onSubmit 
       setSummary(t.common.missing(ids.length));
       // Move to the first unanswered question.
       const first = document.getElementById(`q-${ids[0]}`);
-      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      first?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
       first?.querySelector<HTMLElement>("input, textarea")?.focus({ preventScroll: true });
       return;
     }
@@ -71,7 +72,7 @@ export default function SurveyForm({ sections, canonical, submitLabel, onSubmit 
           })}
         </section>
       ))}
-      <button className="primary" type="button" onClick={submit}>{submitLabel}</button>
+      <button className="primary survey-submit" type="button" onClick={submit}>{submitLabel}</button>
       {summary && <p className="error" role="alert">{summary}</p>}
     </div>
   );
