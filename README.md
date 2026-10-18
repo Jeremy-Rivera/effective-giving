@@ -29,8 +29,6 @@ Everything is held in `sessionStorage` until the final submit, so a participant 
 
 All copy lives in `lib/i18n/en.ts`, `hi.ts`, and `gu.ts`. Each file holds the consent text, survey items, portal copy, and organization descriptions for one language. Stored answers use the English option text regardless of display language, so all three languages land in one coding scheme. The participant's language is saved with their record (`locale`).
 
-The Hindi and Gujarati consent text has not been reviewed by a native speaker. Have it checked before it goes to IRB.
-
 ## Where to edit content
 
 - Consent and landing text: `lib/i18n/*.ts` under `landing`

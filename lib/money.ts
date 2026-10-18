@@ -1,9 +1,7 @@
-// DECISION 8.1 / 11.7: the IRB protocol abstract says participants allocate
-// "a hypothetical $10,000". The Oct 17 meeting chose a budget of up to $1,003
-// (amounts end in 1, which Jain donors prefer over round numbers). Jeremy is
-// checking with Justin. If the figure changes, change the constants here AND
-// the dollar wording in lib/i18n/*.ts (give.lede, give.continueReason) and the
-// comments in supabase/schema.sql.
+// Oct 17 meeting: a budget of up to $1,003, with amounts that end in 1
+// (Jain donors prefer them over round numbers). If the figures change, change
+// the constants here AND the dollar wording in lib/i18n/*.ts (give.lede,
+// give.continueReason).
 
 // The most a participant may allocate (the "up to" figure shown on /give).
 export const BUDGET = 1003;
